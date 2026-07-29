@@ -1,0 +1,347 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════
+   NETQUEST DESIGN SYSTEM
+   Carried from v1: dark field, neon-green signal, arcade energy.
+   Tightened for v2: one accent with a job, cyan reserved strictly
+   for links/connections, monospace promoted to a real voice.
+   ══════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ---- surfaces: a dark field with cool blue in the shadows ---- */
+  --color-void: #070d16;
+  --color-deep: #0a1220;
+  --color-surface: #0f1826;
+  --color-raised: #151f31;
+  --color-line: #1e2c44;
+
+  /* ---- ink ---- */
+  --color-text: #e8f4ff;
+  --color-muted: #8fa7c4;
+  --color-faint: #5c718f;
+
+  /* ---- signal: the one accent. Everything important is green. ---- */
+  --color-signal: #00f5a0;
+  --color-signal-dim: #00c07d;
+  --color-signal-soft: rgba(0, 245, 160, 0.1);
+
+  /* ---- wire: cyan, reserved for links, paths, connections ---- */
+  --color-wire: #00c9ff;
+  --color-wire-soft: rgba(0, 201, 255, 0.1);
+
+  /* ---- states ---- */
+  --color-alert: #ff4d6d;
+  --color-warn: #ffb84d;
+
+  /* ---- type ---- */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ---- radius: 14px reads engineered; 22px read bubbly ---- */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Tells the browser this is a dark UI so it renders native widgets
+       — select popups, scrollbars, date pickers — to match. */
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--color-void);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Ambient field: a faint network grid rather than decorative stars.
+     The grid is the subject — coordinates, not sky. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(0, 201, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 201, 255, 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-signal);
+    color: var(--color-void);
+  }
+}
+
+@layer components {
+  /* ---------- surfaces ---------- */
+  .nq-card {
+    background: linear-gradient(180deg, rgba(21, 31, 49, 0.9), rgba(15, 24, 38, 0.95));
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+  }
+
+  .nq-card-hover {
+    transition: border-color 0.18s ease, transform 0.18s ease;
+  }
+  .nq-card-hover:hover {
+    border-color: color-mix(in srgb, var(--color-signal) 45%, transparent);
+    transform: translateY(-2px);
+  }
+
+  /* ---------- SIGNATURE: link LEDs ----------
+     Switch-port activity lights. They encode real state —
+     locked, available, complete — not decoration. */
+  .led {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    flex: 0 0 7px;
+    background: #24354f;
+    display: inline-block;
+  }
+  .led-live {
+    background: var(--color-signal);
+    box-shadow: 0 0 8px var(--color-signal);
+    animation: led-blink 1.6s steps(1) infinite;
+  }
+  .led-done {
+    background: var(--color-signal);
+    box-shadow: 0 0 6px var(--color-signal);
+  }
+  .led-wire {
+    background: var(--color-wire);
+    box-shadow: 0 0 8px var(--color-wire);
+  }
+
+  @keyframes led-blink {
+    0%, 70% { opacity: 1; }
+    71%, 100% { opacity: 0.25; }
+  }
+
+  /* ---------- eyebrow: reads like a status line ---------- */
+  .nq-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.925rem;
+    transition: all 0.16s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--color-signal);
+    color: var(--color-void);
+  }
+  .btn-primary:hover {
+    background: #4dffbe;
+    box-shadow: 0 0 24px rgba(0, 245, 160, 0.3);
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--color-line);
+    color: var(--color-text);
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-signal);
+    color: var(--color-signal);
+  }
+
+  /* ---------- terminal ---------- */
+  .nq-term {
+    background: #04090f;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.75;
+    color: var(--color-signal);
+    padding: 1rem 1.15rem;
+    overflow: hidden;
+  }
+  .nq-term .dim { color: var(--color-signal-dim); opacity: 0.75; }
+  .nq-term .out { color: var(--color-text); }
+
+  .caret::after {
+    content: "";
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    background: var(--color-signal);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: caret 1s steps(1) infinite;
+  }
+  @keyframes caret {
+    50% { opacity: 0; }
+  }
+}
+
+/* ---------- motion, opt-out respected ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- rich text: editor body + student reader ---------- */
+.nq-editor-body h2, .nq-prose h2 { font-size: 1.35rem; font-weight: 700; margin: 1.2em 0 .5em; }
+.nq-editor-body h3, .nq-prose h3 { font-size: 1.1rem; font-weight: 600; margin: 1em 0 .4em; }
+.nq-editor-body p, .nq-prose p { margin: .6em 0; }
+.nq-editor-body ul, .nq-prose ul { list-style: disc; padding-left: 1.4em; margin: .6em 0; }
+.nq-editor-body ol, .nq-prose ol { list-style: decimal; padding-left: 1.4em; margin: .6em 0; }
+.nq-editor-body blockquote, .nq-prose blockquote {
+  border-left: 3px solid var(--color-signal);
+  padding-left: 1em; margin: .8em 0; color: var(--color-muted);
+}
+.nq-editor-body code, .nq-prose code {
+  font-family: var(--font-mono); font-size: .85em;
+  background: rgba(0, 245, 160, .08); color: var(--color-signal);
+  padding: .12em .35em; border-radius: 5px;
+}
+.nq-editor-body a, .nq-prose a { color: var(--color-wire); text-decoration: underline; }
+.nq-editor-body img, .nq-prose img { max-width: 100%; border-radius: 10px; margin: .8em 0; }
+.nq-editor-body hr, .nq-prose hr { border: 0; border-top: 1px solid var(--color-line); margin: 1.2em 0; }
+.nq-editor-body table, .nq-prose table {
+  width: 100%; border-collapse: collapse; margin: .8em 0; font-size: .92em;
+}
+.nq-editor-body th, .nq-prose th {
+  background: var(--color-deep); font-family: var(--font-mono);
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--color-muted); text-align: left;
+}
+.nq-editor-body th, .nq-editor-body td, .nq-prose th, .nq-prose td {
+  border: 1px solid var(--color-line); padding: .5em .7em;
+}
+.nq-editor-body .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #3d4f6b; float: left; height: 0; pointer-events: none;
+}
+/* the [[page]] marker reads as a visible break while editing */
+.nq-editor-body p:has(> br):empty { margin: 0; }
+
+/* ---------- arcade ---------- */
+@keyframes arc-pop {
+  0%   { transform: scale(2.1); opacity: 0; }
+  35%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes arc-fade { to { opacity: 0; } }
+@keyframes arc-shake-kf {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
+}
+.arc-shake { animation: arc-shake-kf .35s; }
+
+/* Door Challenge corridor */
+.door-scene { perspective: 900px; }
+.door-panel {
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform .55s cubic-bezier(.6,0,.3,1), border-color .15s, box-shadow .15s;
+}
+.door-panel:hover { border-color: var(--color-signal); box-shadow: 0 0 26px rgba(0,245,160,.25); }
+.door-panel.is-open { transform: rotateY(-82deg); border-color: var(--color-signal); }
+.door-panel.is-slam { animation: door-slam .35s; border-color: var(--color-alert) !important; }
+@keyframes door-slam {
+  0% { transform: rotateY(-14deg); }
+  60% { transform: rotateY(3deg); }
+  100% { transform: rotateY(0); }
+}
+
+/* Net CLI terminal */
+.cli-screen {
+  background: #04090f;
+  font-family: var(--font-mono);
+  font-size: .84rem;
+  line-height: 1.7;
+  color: var(--color-signal);
+  position: relative;
+  overflow-y: auto;
+}
+.cli-screen::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.13) 0 1px, transparent 1px 3px);
+}
+.cli-line { white-space: pre-wrap; word-break: break-word; }
+.cli-input { background: transparent; border: 0; outline: 0; color: var(--color-signal); font: inherit; flex: 1; }
+
+/* ---------- native form controls ----------
+   The <select> popup is drawn by the OS, not the page, so it ignores
+   the parent's background. Styling the options directly (plus
+   color-scheme: dark above) keeps the list readable. */
+select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+select option {
+  background-color: var(--color-raised);
+  color: var(--color-text);
+  padding: 8px 10px;
+}
+select option:checked,
+select option:hover {
+  background-color: var(--color-signal-soft);
+  color: var(--color-signal);
+}
+select:disabled {
+  color: var(--color-muted);
+}
+
+/* Checkboxes and radios pick up the accent without extra classes. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-signal);
+}
+
+/* Autofill in Chrome forces a light background — override it. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset;
+  caret-color: var(--color-text);
+}
