@@ -42,6 +42,15 @@ async function viaBrevo({ to, subject, html }: Send, key: string) {
     console.error("Brevo error:", res.status, await res.text());
     return false;
   }
+
+  /* Log the accepted message id so a send can be matched against the
+     Brevo dashboard when someone says "it never arrived". */
+  try {
+    const body = (await res.json()) as { messageId?: string };
+    console.log(`[mail] Brevo accepted → ${to} (messageId ${body.messageId ?? "?"})`);
+  } catch {
+    console.log(`[mail] Brevo accepted → ${to}`);
+  }
   return true;
 }
 

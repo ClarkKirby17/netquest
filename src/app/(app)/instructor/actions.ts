@@ -76,3 +76,31 @@ export async function rejectStudent(formData: FormData) {
   revalidatePath("/instructor/approvals");
   revalidatePath("/instructor");
 }
+
+/** Same idea as the admin action, scoped to this instructor's students. */
+export async function verifyStudentEmail(formData: FormData) {
+  const me = await requireRole("instructor");
+  const studentId = Number(formData.get("userId"));
+  if (!studentId) return;
+
+  const profile = await db.query.studentProfiles.findFirst({
+    where: and(
+      eq(studentProfiles.userId, studentId),
+      eq(studentProfiles.instructorId, me.userId)
+    ),
+  });
+  if (!profile) return;
+
+  await db
+    .update(users)
+    .set({ emailVerifiedAt: new Date() })
+    .where(eq(users.id, studentId));
+  await db.insert(auditLogs).values({
+    event: "email.verified_manually",
+    userId: me.userId,
+    userRole: "instructor",
+    details: `student:${studentId}`,
+  });
+
+  revalidatePath("/instructor/approvals");
+}

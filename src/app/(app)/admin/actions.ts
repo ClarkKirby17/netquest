@@ -175,6 +175,37 @@ export async function deleteSection(formData: FormData) {
   revalidatePath("/admin/courses");
 }
 
+/**
+ * Mark an account's email as verified without them receiving a code.
+ *
+ * Email delivery is the least reliable part of any signup flow —
+ * provider limits, spam filters, typo'd addresses. Since every account
+ * already needs a human to approve it, letting that same human confirm
+ * the address removes a dead end without weakening anything.
+ */
+export async function verifyUserEmail(formData: FormData) {
+  const me = await requireRole(...ADMIN);
+  const id = Number(formData.get("id"));
+  if (!id) return;
+
+  const target = await db.query.users.findFirst({ where: eq(users.id, id) });
+  if (!target || target.emailVerifiedAt) return;
+  /* Admins handle students and instructors; admin accounts are the
+     superadmin's business. */
+  if (target.role === "admin" || target.role === "superadmin") return;
+
+  await db.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.id, id));
+  await db.insert(auditLogs).values({
+    event: "email.verified_manually",
+    userId: me.userId,
+    userRole: me.role,
+    details: target.email,
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/approvals");
+}
+
 /* ───────────────────────────── users ─────────────────────────────── */
 
 export async function setUserStatus(formData: FormData) {

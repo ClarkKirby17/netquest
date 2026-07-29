@@ -2,7 +2,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 import { db, users } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, Table, Th, Td, Pill } from "@/components/ui";
-import { setUserStatus } from "../actions";
+import { setUserStatus, verifyUserEmail } from "../actions";
 
 export default async function UsersPage() {
   await requireRole("admin", "superadmin");
@@ -24,7 +24,7 @@ export default async function UsersPage() {
         <CardHead title="All accounts" sub={`${rows.length} users`} />
         <Table>
           <thead>
-            <tr><Th>Name</Th><Th>Email</Th><Th>Role</Th><Th>Status</Th><Th className="text-right">Action</Th></tr>
+            <tr><Th>Name</Th><Th>Email</Th><Th>Role</Th><Th>Email verified</Th><Th>Status</Th><Th className="text-right">Action</Th></tr>
           </thead>
           <tbody>
             {rows.map((u) => (
@@ -35,6 +35,21 @@ export default async function UsersPage() {
                   <span className="font-[family-name:var(--font-mono-src)] text-xs uppercase tracking-wider text-[var(--color-muted)]">
                     {u.role}
                   </span>
+                </Td>
+                <Td>
+                  {u.emailVerifiedAt ? (
+                    <Pill tone="signal">verified</Pill>
+                  ) : (
+                    <form action={verifyUserEmail}>
+                      <input type="hidden" name="id" value={u.id} />
+                      <button
+                        className="btn btn-ghost px-2.5 py-1 text-[.75rem]"
+                        title="Confirm this address yourself if the code never arrived"
+                      >
+                        Verify manually
+                      </button>
+                    </form>
+                  )}
                 </Td>
                 <Td>
                   {u.status === "active" && <Pill tone="signal">active</Pill>}

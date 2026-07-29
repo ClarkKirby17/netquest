@@ -3,7 +3,7 @@ import { UserCheck } from "lucide-react";
 import { db, users, instructorProfiles, courses, sections } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, Table, Th, Td, Empty, Pill } from "@/components/ui";
-import { approveInstructor, rejectInstructor } from "../actions";
+import { approveInstructor, rejectInstructor, verifyUserEmail } from "../actions";
 
 export default async function AdminApprovalsPage() {
   await requireRole("admin", "superadmin");
@@ -46,7 +46,21 @@ export default async function AdminApprovalsPage() {
                   <Td className="font-medium">{r.name}</Td>
                   <Td className="text-[var(--color-muted)]">{r.email}</Td>
                   <Td className="text-[var(--color-muted)]">{r.course ?? "—"} · {r.section ?? "—"}</Td>
-                  <Td>{r.verified ? <Pill tone="signal">verified</Pill> : <Pill tone="warn">not yet</Pill>}</Td>
+                  <Td>
+                    {r.verified ? (
+                      <Pill tone="signal">verified</Pill>
+                    ) : (
+                      <form action={verifyUserEmail}>
+                        <input type="hidden" name="id" value={r.id} />
+                        <button
+                          className="btn btn-ghost px-2.5 py-1 text-[.75rem]"
+                          title="Confirm this address yourself if the code never arrived"
+                        >
+                          Verify manually
+                        </button>
+                      </form>
+                    )}
+                  </Td>
                   <Td className="text-right">
                     <div className="flex justify-end gap-2">
                       <form action={approveInstructor}>

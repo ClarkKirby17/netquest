@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, PartyPopper, Loader2 } from "lucide-react";
 import { markPageRead } from "../../actions";
@@ -42,6 +42,10 @@ export default function Reader({
   /* A separate transition for navigation so the button can show a
      pending state and refuse repeat clicks. Spamming it used to queue
      several server renders that then fought over the connection pool. */
+  const [saveError, setSaveError] = useState<string | null>(null);
+  /* Pages already sent to the server, so a scroll event storm cannot
+     fire the same save a dozen times. */
+  const savedPages = useRef<Set<number>>(new Set());
   const [navigating, startNavigation] = useTransition();
   const router = useRouter();
   const sentinel = useRef<HTMLDivElement>(null);
@@ -49,37 +53,73 @@ export default function Reader({
   const isLast = page >= pages.length - 1;
   const percent = Math.round(((page + 1) / pages.length) * 100);
 
-  /* Reset the gate on every page turn. */
+  /* Reset the gate on every page turn.
+     The scroll is instant, not smooth: a smooth animation was still
+     running when the visibility check ran, so whether the page counted
+     as read depended on animation timing. */
   useEffect(() => {
     setReadable(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setSaveError(null);
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, [page]);
 
-  /* When the end of the page becomes visible, the page counts as read. */
+  /* Has the reader reached the bottom of this page?
+     A plain scroll measurement rather than IntersectionObserver — it
+     is predictable, it survives layout shifts, and it handles the case
+     where the page is shorter than the viewport (nothing to scroll, so
+     it counts as read straight away). */
   useEffect(() => {
-    const el = sentinel.current;
-    if (!el) return;
+    const check = () => {
+      const el = sentinel.current;
+      if (!el) return;
 
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setReadable(true);
-        startTransition(async () => {
-          const res = await markPageRead(lessonId, page);
-          if (res.ok) {
-            setFurthest((f) => Math.max(f, page));
-            if (res.lessonCompleted) setDone(true);
-            if (res.moduleCompleted) setModuleDone(true);
-          }
-        });
-        io.disconnect();
-      },
-      { rootMargin: "0px 0px -80px 0px" }
-    );
+      const fitsWithoutScrolling =
+        document.documentElement.scrollHeight <= window.innerHeight + 4;
+      const reachedBottom = el.getBoundingClientRect().top <= window.innerHeight - 40;
 
-    io.observe(el);
-    return () => io.disconnect();
+      if (fitsWithoutScrolling || reachedBottom) setReadable(true);
+    };
+
+    /* Run once after layout settles, then on every scroll and resize. */
+    const id = window.setTimeout(check, 120);
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [page, lessonId]);
+
+  /* Record the page once it counts as read. Separated from detection so
+     a failed save can be retried without re-scrolling, and so a slow
+     save can show itself instead of failing silently. */
+  const savePage = useCallback(() => {
+    if (savedPages.current.has(page)) return;
+    savedPages.current.add(page);
+    setSaveError(null);
+
+    startTransition(async () => {
+      try {
+        const res = await markPageRead(lessonId, page);
+        if (!res.ok) {
+          savedPages.current.delete(page);
+          setSaveError("Couldn't save your progress. Tap retry.");
+          return;
+        }
+        setFurthest((f) => Math.max(f, page));
+        if (res.lessonCompleted) setDone(true);
+        if (res.moduleCompleted) setModuleDone(true);
+      } catch {
+        savedPages.current.delete(page);
+        setSaveError("Couldn't reach the server. Tap retry.");
+      }
+    });
   }, [lessonId, page]);
+
+  useEffect(() => {
+    if (readable) savePage();
+  }, [readable, savePage]);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -129,6 +169,15 @@ export default function Reader({
               .
             </p>
           </div>
+        </div>
+      )}
+
+      {saveError && (
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-[12px] border border-[rgba(255,184,77,.35)] bg-[rgba(255,184,77,.08)] px-5 py-3.5">
+          <span className="flex-1 text-sm text-[var(--color-warn)]">{saveError}</span>
+          <button onClick={savePage} className="btn btn-ghost px-3 py-1.5 text-[.82rem]">
+            Retry
+          </button>
         </div>
       )}
 
@@ -190,9 +239,13 @@ export default function Reader({
             </button>
           )
         ) : (
-          <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
-            scroll to the end to finish
-          </span>
+          <button
+            onClick={() => setReadable(true)}
+            className="btn btn-ghost"
+            title="Marks this page as read"
+          >
+            <Check size={16} /> I&apos;ve read this page
+          </button>
         )}
 
         {done && (
