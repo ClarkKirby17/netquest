@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Menu, X, LogOut, Bell, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { Menu, X, LogOut, Bell, PanelLeftClose, PanelLeftOpen, Loader2 } from "lucide-react";
 import { NAV, ROLE_LABEL } from "@/lib/nav";
 import type { Role } from "@/db/schema";
 import { Led } from "@/components/ui";
@@ -27,6 +27,11 @@ export default function AppShell({
   unread?: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  /* Navigation runs through a transition so a slow server render shows
+     a spinner on the item being opened instead of a dead sidebar. */
+  const [navigating, startNavigation] = useTransition();
+  const [target, setTarget] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [ready, setReady] = useState(false);
@@ -41,6 +46,10 @@ export default function AppShell({
     }
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    setTarget(null);
+  }, [pathname]);
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
@@ -93,20 +102,32 @@ export default function AppShell({
             <Link
               key={href}
               href={href}
-              onClick={() => setDrawerOpen(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                setDrawerOpen(false);
+                if (href === pathname) return;
+                setTarget(href);
+                startNavigation(() => router.push(href));
+              }}
               title={mini ? label : undefined}
               aria-label={mini ? label : undefined}
+              aria-busy={navigating && target === href}
               className={cn(
                 "group relative flex items-center rounded-[10px] text-sm transition-colors duration-150",
                 mini ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
                 active
                   ? "bg-[var(--color-signal-soft)] font-medium text-[var(--color-signal)]"
-                  : "text-[var(--color-muted)] hover:bg-[rgba(255,255,255,.04)] hover:text-[var(--color-text)]"
+                  : "text-[var(--color-muted)] hover:bg-[rgba(255,255,255,.04)] hover:text-[var(--color-text)]",
+                navigating && target !== href && "opacity-50"
               )}
             >
-              <Icon size={17} className="shrink-0" />
+              {navigating && target === href ? (
+                <Loader2 size={17} className="shrink-0 animate-spin" />
+              ) : (
+                <Icon size={17} className="shrink-0" />
+              )}
               {!mini && <span className="whitespace-nowrap">{label}</span>}
-              {!mini && active && <Led state="done" className="ml-auto" />}
+              {!mini && active && !navigating && <Led state="done" className="ml-auto" />}
 
               {mini && (
                 <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md border border-[var(--color-line)] bg-[var(--color-raised)] px-2.5 py-1.5 text-xs text-[var(--color-text)] shadow-lg group-hover:block">

@@ -7,10 +7,10 @@ import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
 import {
   db, users, studentProfiles, instructorProfiles, sections,
-  verificationCodes, auditLogs, gamification,
+  verificationCodes, passwordResets, auditLogs, gamification,
 } from "@/db";
 import { loginSchema, registerSchema, verifySchema } from "@/lib/validations";
-import { sendVerificationCode } from "@/lib/mail";
+import { sendVerificationCode, sendPasswordResetCode } from "@/lib/mail";
 import { HOME_FOR } from "@/lib/roles";
 import { getSetting } from "@/lib/settings";
 
@@ -238,4 +238,102 @@ async function issueCode(email: string): Promise<string | null> {
   const { delivered } = await sendVerificationCode(email, code);
   const dev = !delivered && process.env.NODE_ENV !== "production";
   return dev ? code : null;
+}
+
+/* ────────────────────── forgot / reset password ──────────────────────
+   A 6-digit code rather than a magic link: it matches the rest of the
+   app, works if the mail lands on a different device, and cannot leak
+   through a browser history or a copied URL. */
+
+export async function requestPasswordReset(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { error: "Enter a valid email address." };
+  }
+
+  const user = await db.query.users.findFirst({ where: eq(users.email, email) });
+
+  /* Only real, active accounts get a code — but the response is the
+     same either way, so this cannot be used to discover who has an
+     account here. */
+  let devCode: string | null = null;
+  if (user && user.status === "active") {
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    await db.insert(passwordResets).values({
+      email,
+      tokenHash: await bcrypt.hash(code, 10),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    const { delivered } = await sendPasswordResetCode(email, code);
+    if (!delivered && process.env.NODE_ENV !== "production") devCode = code;
+
+    await db.insert(auditLogs).values({
+      event: "password.reset_requested",
+      userId: user.id,
+      userRole: user.role,
+      details: email,
+    });
+  }
+
+  redirect(
+    `/reset-password?email=${encodeURIComponent(email)}${devCode ? `&dev=${devCode}` : ""}`
+  );
+}
+
+export async function resetPassword(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const code = String(formData.get("code") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (!/^\d{6}$/.test(code)) return { error: "The code is 6 digits." };
+  if (password.length < 8) return { error: "Use at least 8 characters." };
+  if (password !== confirm) return { error: "The two passwords don't match." };
+
+  const record = await db.query.passwordResets.findFirst({
+    where: and(
+      eq(passwordResets.email, email),
+      isNull(passwordResets.usedAt),
+      gt(passwordResets.expiresAt, new Date())
+    ),
+    orderBy: (t, { desc }) => [desc(t.id)],
+  });
+
+  if (!record) {
+    return { error: "That code expired or was already used. Request a new one." };
+  }
+
+  const match = await bcrypt.compare(code, record.tokenHash);
+  if (!match) {
+    return { error: "That code doesn't match. Check the email and try again." };
+  }
+
+  const user = await db.query.users.findFirst({ where: eq(users.email, email) });
+  if (!user) return { error: "Something went wrong. Start again." };
+
+  /* Single use: burn the token before changing anything. */
+  await db
+    .update(passwordResets)
+    .set({ usedAt: new Date() })
+    .where(eq(passwordResets.id, record.id));
+
+  await db
+    .update(users)
+    .set({ passwordHash: await bcrypt.hash(password, 12) })
+    .where(eq(users.id, user.id));
+
+  await db.insert(auditLogs).values({
+    event: "password.reset_completed",
+    userId: user.id,
+    userRole: user.role,
+    details: email,
+  });
+
+  redirect("/login?reset=1");
 }

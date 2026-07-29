@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ closed?: string }>;
+  searchParams: Promise<{ closed?: string; reset?: string }>;
 }) {
-  const { closed } = await searchParams;
+  const { closed, reset } = await searchParams;
   const [announcement, registrationOpen] = await Promise.all([
     getSetting("announcement"),
     getSetting("registration_enabled"),
@@ -26,6 +26,11 @@ export default async function LoginPage({
         <div className="mb-6 flex items-start gap-3 rounded-[10px] border border-[rgba(255,184,77,.35)] bg-[rgba(255,184,77,.08)] px-4 py-3">
           <Megaphone size={16} className="mt-0.5 shrink-0 text-[var(--color-warn)]" />
           <p className="text-sm text-[var(--color-text)]">{announcement}</p>
+        </div>
+      )}
+      {reset && (
+        <div className="mb-6 rounded-[10px] border border-[rgba(0,245,160,.3)] bg-[var(--color-signal-soft)] px-4 py-3 text-sm text-[var(--color-signal)]">
+          Password updated. Sign in with your new one.
         </div>
       )}
       {closed && (

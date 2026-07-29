@@ -180,33 +180,108 @@ export async function lessonsForStudent(userId: number, moduleId: number) {
 /**
  * Everything the reader needs, with access already checked.
  * Returns null when the student may not open this lesson.
+ *
+ * This used to call modulesForStudent() and lessonsForStudent(), which
+ * between them issued about ten sequential queries — painful when the
+ * database is a continent away. It now gathers the same facts in four.
  */
 export async function readerContext(userId: number, lessonId: number) {
-  const lesson = await db.query.lessons.findFirst({ where: eq(lessons.id, lessonId) });
-  if (!lesson) return null;
+  /* 1. the lesson and its module in one join */
+  const rows = await db
+    .select({
+      lesson: lessons,
+      module: modules,
+    })
+    .from(lessons)
+    .innerJoin(modules, eq(modules.id, lessons.moduleId))
+    .where(eq(lessons.id, lessonId))
+    .limit(1);
 
-  const mod = await db.query.modules.findFirst({ where: eq(modules.id, lesson.moduleId) });
-  if (!mod || !mod.isPublished) return null;
+  if (rows.length === 0) return null;
+  const { lesson, module: mod } = rows[0];
+  if (!mod.isPublished) return null;
 
-  // The module itself must be unlocked.
-  const cards = await modulesForStudent(userId);
-  const card = cards.find((c) => c.id === mod.id);
-  if (!card || card.state === "locked") return null;
+  /* 2. every published module, ordered — needed to know which ones
+        come before this one in the unlock chain */
+  const published = await db
+    .select({ id: modules.id, moduleNumber: modules.moduleNumber })
+    .from(modules)
+    .where(eq(modules.isPublished, true))
+    .orderBy(asc(modules.moduleNumber));
 
-  // The lesson must be unlocked within the module.
-  const siblings = await lessonsForStudent(userId, mod.id);
-  const me = siblings.find((l) => l.id === lessonId);
-  if (!me || me.state === "locked") return null;
+  const earlierIds = published
+    .filter((m) => m.moduleNumber < mod.moduleNumber)
+    .map((m) => m.id);
 
-  const pages = splitPages(lesson.contentHtml);
+  /* 3. all lessons in this module plus every earlier one, in a single
+        query, with this student's progress attached */
+  const relevantModuleIds = [...earlierIds, mod.id];
+  const lessonRows = await db
+    .select({
+      id: lessons.id,
+      moduleId: lessons.moduleId,
+      order: lessons.lessonOrder,
+      title: lessons.title,
+      completed: lessonProgress.completed,
+      furthestPage: lessonProgress.furthestPage,
+    })
+    .from(lessons)
+    .leftJoin(
+      lessonProgress,
+      and(eq(lessonProgress.lessonId, lessons.id), eq(lessonProgress.userId, userId))
+    )
+    .where(inArray(lessons.moduleId, relevantModuleIds))
+    .orderBy(asc(lessons.lessonOrder));
+
+  /* Is every earlier module finished? Lessons first… */
+  const earlierLessons = lessonRows.filter((l) => earlierIds.includes(l.moduleId));
+  const earlierAllRead =
+    earlierLessons.length > 0 ? earlierLessons.every((l) => l.completed === true) : true;
+
+  /* …then their quizzes, if any are published. One query covers them. */
+  let earlierQuizzesPassed = true;
+  if (earlierAllRead && earlierIds.length > 0) {
+    const quizRows = await db
+      .select({ quizId: quizzes.id, passed: quizAttempts.passed })
+      .from(quizzes)
+      .leftJoin(
+        quizAttempts,
+        and(
+          eq(quizAttempts.quizId, quizzes.id),
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.passed, true)
+        )
+      )
+      .where(and(inArray(quizzes.moduleId, earlierIds), eq(quizzes.isPublished, true)));
+
+    const byQuiz = new Map<number, boolean>();
+    for (const r of quizRows) {
+      byQuiz.set(r.quizId, byQuiz.get(r.quizId) || r.passed === true);
+    }
+    earlierQuizzesPassed = Array.from(byQuiz.values()).every(Boolean);
+  }
+
+  /* The module is locked unless everything before it is done. */
+  if (!earlierAllRead || !earlierQuizzesPassed) return null;
+
+  /* Within the module, a lesson unlocks once the previous one is read. */
+  const siblings = lessonRows
+    .filter((l) => l.moduleId === mod.id)
+    .sort((a, b) => a.order - b.order);
+
   const index = siblings.findIndex((l) => l.id === lessonId);
+  if (index === -1) return null;
+  if (index > 0 && siblings[index - 1].completed !== true) return null;
+
+  const me = siblings[index];
+  const pages = splitPages(lesson.contentHtml);
 
   return {
     lesson,
     module: mod,
     pages,
-    furthestPage: Math.min(me.furthestPage, pages.length - 1),
-    completed: me.completed,
+    furthestPage: Math.min(me.furthestPage ?? 0, pages.length - 1),
+    completed: me.completed === true,
     prev: index > 0 ? siblings[index - 1] : null,
     next: index < siblings.length - 1 ? siblings[index + 1] : null,
     position: { index: index + 1, total: siblings.length },

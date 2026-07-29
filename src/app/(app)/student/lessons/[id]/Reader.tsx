@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ArrowLeft, ArrowRight, Check, PartyPopper } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, Check, PartyPopper, Loader2 } from "lucide-react";
 import { markPageRead } from "../../actions";
 import { Card, Progress, Led } from "@/components/ui";
 
@@ -38,6 +39,11 @@ export default function Reader({
   const [done, setDone] = useState(completed);
   const [moduleDone, setModuleDone] = useState(false);
   const [, startTransition] = useTransition();
+  /* A separate transition for navigation so the button can show a
+     pending state and refuse repeat clicks. Spamming it used to queue
+     several server renders that then fought over the connection pool. */
+  const [navigating, startNavigation] = useTransition();
+  const router = useRouter();
   const sentinel = useRef<HTMLDivElement>(null);
 
   const isLast = page >= pages.length - 1;
@@ -147,13 +153,41 @@ export default function Reader({
           </button>
         ) : done ? (
           nextLessonId ? (
-            <Link href={`/student/lessons/${nextLessonId}`} className="btn btn-primary">
-              Next lesson <ArrowRight size={16} />
-            </Link>
+            <button
+              onClick={() =>
+                startNavigation(() => router.push(`/student/lessons/${nextLessonId}`))
+              }
+              disabled={navigating}
+              className="btn btn-primary disabled:opacity-70"
+            >
+              {navigating ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Loading…
+                </>
+              ) : (
+                <>
+                  Next lesson <ArrowRight size={16} />
+                </>
+              )}
+            </button>
           ) : (
-            <Link href={`/student/modules/${moduleId}`} className="btn btn-primary">
-              <Check size={16} /> Back to module
-            </Link>
+            <button
+              onClick={() =>
+                startNavigation(() => router.push(`/student/modules/${moduleId}`))
+              }
+              disabled={navigating}
+              className="btn btn-primary disabled:opacity-70"
+            >
+              {navigating ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Loading…
+                </>
+              ) : (
+                <>
+                  <Check size={16} /> Back to module
+                </>
+              )}
+            </button>
           )
         ) : (
           <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">

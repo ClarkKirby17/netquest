@@ -76,9 +76,11 @@ purges. Viewable and filterable at `/superadmin/audit`.
 
 Honest scope notes rather than omissions:
 
-- **Email delivery** requires `RESEND_API_KEY`. Without it, verification codes are
-  printed to the server console and shown on screen in development. Production
-  deployments must set the key.
+- **Email delivery** needs a provider configured. Brevo (`BREVO_API_KEY` plus a
+  verified `MAIL_FROM`) reaches any recipient; Resend (`RESEND_API_KEY`) only
+  reaches the account owner's address until a domain is verified. With neither
+  set, codes are printed to the server console and shown on screen in
+  development only.
 - **Throttling is per-email, not per-IP.** A distributed attack across many
   addresses is not covered. Adequate for a class-sized deployment.
 - **No 2FA.** The approval workflow is the primary identity control.

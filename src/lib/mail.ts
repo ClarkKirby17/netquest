@@ -1,3 +1,19 @@
+/* Email delivery with two interchangeable providers.
+ *
+ * Brevo  — verifies a single SENDER ADDRESS, so it can deliver to any
+ *          recipient without owning a domain. 300/day free.
+ *          Set BREVO_API_KEY and MAIL_FROM (a verified address).
+ *
+ * Resend — verifies a DOMAIN. Until one is verified it only delivers
+ *          to the address the Resend account was created with.
+ *          Set RESEND_API_KEY.
+ *
+ * Neither configured: the code is logged to the server console and,
+ * outside production, surfaced in the UI so the flow stays testable.
+ *
+ * Brevo wins if both are set, because it reaches every recipient.
+ */
+
 type Send = { to: string; subject: string; html: string };
 
 async function viaBrevo({ to, subject, html }: Send, key: string) {
@@ -86,5 +102,39 @@ export async function sendVerificationCode(
   }
 
   console.log(`\n  ✉  [dev mail] verification code for ${email}: ${code}\n`);
+  return { delivered: false };
+}
+
+function resetEmailHtml(code: string) {
+  return `
+    <div style="font-family:system-ui,sans-serif;max-width:420px;margin:0 auto;padding:24px">
+      <h2 style="margin:0 0 4px">Reset your password</h2>
+      <p style="color:#555;margin:0 0 20px">
+        Enter this code to choose a new NetQuest password. It expires in 15 minutes.
+      </p>
+      <div style="font-size:34px;font-weight:700;letter-spacing:.35em;background:#0a1220;color:#00f5a0;padding:18px 0;text-align:center;border-radius:12px">${code}</div>
+      <p style="color:#999;font-size:12px;margin-top:20px">
+        Didn't ask for this? Ignore this email — your password stays unchanged.
+      </p>
+    </div>`;
+}
+
+export async function sendPasswordResetCode(
+  email: string,
+  code: string
+): Promise<{ delivered: boolean }> {
+  const brevo = process.env.BREVO_API_KEY;
+  const resend = process.env.RESEND_API_KEY;
+
+  const payload: Send = {
+    to: email,
+    subject: `${code} is your NetQuest password reset code`,
+    html: resetEmailHtml(code),
+  };
+
+  if (brevo && (await viaBrevo(payload, brevo))) return { delivered: true };
+  if (resend && (await viaResend(payload, resend))) return { delivered: true };
+
+  console.log(`\n  ✉  [dev mail] password reset code for ${email}: ${code}\n`);
   return { delivered: false };
 }

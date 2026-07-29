@@ -294,13 +294,17 @@ export function Td({ children, className }: { children?: React.ReactNode; classN
 }
 
 /* ------------------------------------------------------- Skeleton */
-export function Skeleton({ className }: { className?: string }) {
+export function Skeleton({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-md bg-[rgba(255,255,255,.05)]",
-        className
-      )}
+      style={style}
+      className={cn("animate-pulse rounded-md bg-[rgba(255,255,255,.05)]", className)}
     />
   );
 }
