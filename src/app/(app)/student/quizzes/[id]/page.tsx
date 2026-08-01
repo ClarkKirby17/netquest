@@ -45,8 +45,7 @@ export default async function TakeQuizPage({ params }: { params: Promise<{ id: s
           ["B", q.optionB],
           ["C", q.optionC],
           ["D", q.optionD],
-        ].filter(([, t]) => Boolean(t)) as [string, string][],
-      }))}
+        ].filter(([, t]) => Boolean(t)) as [string, string][] }))}
     />
   );
 }

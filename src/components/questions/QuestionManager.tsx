@@ -19,8 +19,7 @@ export type DoorQ = {
 export default function QuestionManager({
   scope,
   questions,
-  globalCount = 0,
-}: {
+  globalCount = 0 }: {
   scope: "mine" | "global";
   questions: DoorQ[];
   globalCount?: number;

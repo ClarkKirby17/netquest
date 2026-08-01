@@ -15,8 +15,7 @@ import {
   Bold, Italic, Strikethrough, Code, Heading2, Heading3, List, ListOrdered,
   Quote, Minus, Link2, Image as ImageIcon, Table as TableIcon,
   Rows3, Columns3, Trash2, Undo2, Redo2, SquareSplitVertical,
-  Upload, Loader2,
-} from "lucide-react";
+  Upload, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* The editor the old plain <textarea> should have been: bold, italic,
@@ -26,8 +25,7 @@ import { cn } from "@/lib/utils";
 export default function RichEditor({
   name,
   initialHtml = "",
-  placeholder = "Write the lesson…",
-}: {
+  placeholder = "Write the lesson…" }: {
   name: string;
   initialHtml?: string;
   placeholder?: string;
@@ -40,8 +38,7 @@ export default function RichEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        heading: { levels: [2, 3] },
-      }),
+        heading: { levels: [2, 3] } }),
       Table.configure({ resizable: false }),
       TableRow,
       TableHeader,
@@ -54,10 +51,7 @@ export default function RichEditor({
     editorProps: {
       attributes: {
         class:
-          "nq-editor-body focus:outline-none min-h-[320px] px-4 py-3 text-[.95rem] leading-relaxed",
-      },
-    },
-  });
+          "nq-editor-body focus:outline-none min-h-[320px] px-4 py-3 text-[.95rem] leading-relaxed" } } });
 
   if (!editor) {
     return (
@@ -211,8 +205,7 @@ function HiddenSync({ name, editor }: { name: string; editor: ReturnType<typeof 
 }
 
 function Btn({
-  on, active, label, children,
-}: {
+  on, active, label, children }: {
   on: () => void; active?: boolean; label: string; children: React.ReactNode;
 }) {
   return (

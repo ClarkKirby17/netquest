@@ -4,8 +4,7 @@
    cannot rely on any of the app's styling. */
 export default function GlobalError({
   error,
-  reset,
-}: {
+  reset }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
@@ -21,8 +20,7 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           margin: 0,
-          padding: 24,
-        }}
+          padding: 24 }}
       >
         <div style={{ maxWidth: 380, textAlign: "center" }}>
           <h1 style={{ fontSize: 22, marginBottom: 8 }}>NetQuest is down</h1>
@@ -39,8 +37,7 @@ export default function GlobalError({
             style={{
               marginTop: 24, background: "#00f5a0", color: "#070d16",
               border: 0, borderRadius: 8, padding: "10px 20px",
-              fontWeight: 600, cursor: "pointer",
-            }}
+              fontWeight: 600, cursor: "pointer" }}
           >
             Reload
           </button>

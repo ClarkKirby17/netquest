@@ -13,8 +13,7 @@ const labelCx =
   "mb-1.5 block font-[family-name:var(--font-mono-src)] text-[.68rem] uppercase tracking-[.14em] text-[var(--color-muted)]";
 
 export default function SettingsForm({
-  values,
-}: {
+  values }: {
   values: Record<keyof typeof SETTING_DEFAULTS, string>;
 }) {
   const [state, action, pending] = useActionState(saveSettings, initial);

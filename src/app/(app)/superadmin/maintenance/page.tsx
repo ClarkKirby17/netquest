@@ -2,8 +2,7 @@ import { and, count, eq, lt } from "drizzle-orm";
 import { Database, Trash2 } from "lucide-react";
 import {
   db, users, studentProfiles, modules, lessons, quizAttempts, gameScores,
-  notifications, auditLogs, verificationCodes, passwordResets, cliMissions,
-} from "@/db";
+  notifications, auditLogs, verificationCodes, passwordResets, cliMissions } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, StatTile, Table, Th, Td } from "@/components/ui";
 import { runPurge } from "../actions";

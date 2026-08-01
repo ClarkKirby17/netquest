@@ -5,8 +5,7 @@ import { requireRole } from "@/lib/guard";
 import QuizEditor from "@/components/quiz/QuizEditor";
 
 export default async function InstructorQuizEditor({
-  params,
-}: {
+  params }: {
   params: Promise<{ moduleId: string }>;
 }) {
   const me = await requireRole("instructor");
@@ -19,8 +18,7 @@ export default async function InstructorQuizEditor({
 
   /* Scoped to this instructor — nobody edits another's quiz. */
   const quiz = await db.query.quizzes.findFirst({
-    where: and(eq(quizzes.moduleId, moduleId), eq(quizzes.instructorId, me.userId)),
-  });
+    where: and(eq(quizzes.moduleId, moduleId), eq(quizzes.instructorId, me.userId)) });
   if (!quiz) notFound();
 
   const questions = await db
@@ -30,8 +28,7 @@ export default async function InstructorQuizEditor({
     .orderBy(asc(quizQuestions.sortOrder), asc(quizQuestions.id));
 
   const fallback = await db.query.quizzes.findFirst({
-    where: and(eq(quizzes.moduleId, moduleId), isNull(quizzes.instructorId)),
-  });
+    where: and(eq(quizzes.moduleId, moduleId), isNull(quizzes.instructorId)) });
   let defaultQuestionCount = 0;
   if (fallback) {
     const [{ n }] = await db

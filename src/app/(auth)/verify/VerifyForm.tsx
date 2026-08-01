@@ -7,8 +7,7 @@ const initial: ActionState = {};
 
 export default function VerifyForm({
   email,
-  devCode,
-}: {
+  devCode }: {
   email: string;
   devCode?: string;
 }) {
@@ -86,6 +85,12 @@ export default function VerifyForm({
           <p className="mt-2 text-xs text-[var(--color-muted)]">{resendState.error}</p>
         )}
       </form>
+
+      <p className="mt-5 rounded-[10px] border border-[var(--color-line)] px-4 py-3 text-xs leading-relaxed text-[var(--color-muted)]">
+        Still nothing after a few minutes? Check your spam folder. If it never
+        arrives, your instructor or an admin can verify your account for you —
+        the code isn&apos;t the only way in.
+      </p>
     </>
   );
 }

@@ -65,8 +65,7 @@ export default function TraceHero() {
                   strokeWidth="2.5"
                   style={{
                     transition: "all .3s ease",
-                    filter: reached ? "drop-shadow(0 0 7px rgba(0,245,160,.55))" : "none",
-                  }}
+                    filter: reached ? "drop-shadow(0 0 7px rgba(0,245,160,.55))" : "none" }}
                 />
                 <text
                   x={h.x} y={h.y + 34}

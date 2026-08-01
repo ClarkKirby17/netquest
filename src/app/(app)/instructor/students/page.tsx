@@ -6,8 +6,7 @@ import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, Table, Th, Td, Progress, Empty } from "@/components/ui";
 
 export default async function StudentsPage({
-  searchParams,
-}: {
+  searchParams }: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const me = await requireRole("instructor");
@@ -26,8 +25,7 @@ export default async function StudentsPage({
       name: users.fullName,
       email: users.email,
       section: sections.name,
-      points: studentProfiles.totalPoints,
-    })
+      points: studentProfiles.totalPoints })
     .from(users)
     .innerJoin(studentProfiles, eq(studentProfiles.userId, users.id))
     .innerJoin(sections, eq(sections.id, studentProfiles.sectionId))
@@ -79,7 +77,7 @@ export default async function StudentsPage({
         ) : (
           <Table>
             <thead>
-              <tr><Th>Student</Th><Th>Section</Th><Th>Points</Th><Th>Lessons</Th><Th className="w-52">Progress</Th></tr>
+              <tr><Th>Student</Th><Th>Section</Th><Th>Points</Th><Th>Lessons</Th><Th className="w-52">Progress</Th><Th className="text-right">Password</Th></tr>
             </thead>
             <tbody>
               {withProgress.map((s) => (
@@ -92,6 +90,14 @@ export default async function StudentsPage({
                   <Td><span className="font-[family-name:var(--font-mono-src)] text-[var(--color-signal)]">{s.points}</span></Td>
                   <Td className="text-[var(--color-muted)]">{s.done}/{Number(totalLessons)}</Td>
                   <Td><Progress value={s.pct} /></Td>
+                  <Td className="text-right">
+                    <ResetPasswordInline
+                      action={resetStudentPassword}
+                      idName="userId"
+                      id={s.id}
+                      name={s.name}
+                    />
+                  </Td>
                 </tr>
               ))}
             </tbody>

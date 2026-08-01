@@ -9,8 +9,7 @@ import { AlertTriangle, RotateCcw, Home } from "lucide-react";
    like a crash in production. */
 export default function Error({
   error,
-  reset,
-}: {
+  reset }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {

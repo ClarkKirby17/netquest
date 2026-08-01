@@ -6,26 +6,22 @@ const REPORTS = [
     key: "students",
     name: "Student progress",
     icon: Users,
-    desc: "One row per student: course, section, points, badges, level, XP, streak, and modules and lessons completed.",
-  },
+    desc: "One row per student: course, section, points, badges, level, XP, streak, and modules and lessons completed." },
   {
     key: "quizzes",
     name: "Quiz results",
     icon: GraduationCap,
-    desc: "One row per student per quiz: attempts used, best percentage, pass status, and the latest attempt.",
-  },
+    desc: "One row per student per quiz: attempts used, best percentage, pass status, and the latest attempt." },
   {
     key: "arcade",
     name: "Arcade activity",
     icon: Gamepad2,
-    desc: "Runs, best score, and points earned per student per game.",
-  },
+    desc: "Runs, best score, and points earned per student per game." },
   {
     key: "leaderboard",
     name: "Leaderboard snapshot",
     icon: Trophy,
-    desc: "The current ranking by total points, with badges and levels — ready to print or share.",
-  },
+    desc: "The current ranking by total points, with badges and levels — ready to print or share." },
 ];
 
 export default function ReportsView({ base, scoped }: { base: string; scoped: boolean }) {

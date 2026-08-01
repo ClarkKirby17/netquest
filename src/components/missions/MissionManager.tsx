@@ -1,8 +1,7 @@
 import { Terminal, Check } from "lucide-react";
 import { Card, CardHead, Pill, Empty } from "@/components/ui";
 import {
-  createMission, deleteMission, toggleMission, addObjective, deleteObjective,
-} from "@/lib/mission-actions";
+  createMission, deleteMission, toggleMission, addObjective, deleteObjective } from "@/lib/mission-actions";
 import { OBJECTIVE_KINDS, INTERFACES, describeObjective } from "@/lib/cli-types";
 import type { CliObjectiveKind, Difficulty } from "@/db/schema";
 import { cn } from "@/lib/utils";
@@ -31,8 +30,7 @@ export type MissionRow = {
 export default function MissionManager({
   scope,
   missions,
-  globalCount = 0,
-}: {
+  globalCount = 0 }: {
   scope: "mine" | "global";
   missions: MissionRow[];
   globalCount?: number;

@@ -4,8 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Difficulty } from "@/db/schema";
 import {
   TitleScreen, Countdown, Hud, HudItem, Summary,
-  useArcadeSound, type SubmitResult,
-} from "./shell";
+  useArcadeSound, type SubmitResult } from "./shell";
 
 /* Packet Run — you are a packet crossing a congested link.
    Jump collisions, duck broadcast storms. The networking content is
@@ -19,8 +18,7 @@ const CONFIG: Record<
 > = {
   easy:   { speed: 4.4, gravity: 0.62, spawn: 105, desc: "Steady link. Room to react between hazards." },
   medium: { speed: 5.8, gravity: 0.72, spawn: 80,  desc: "Busy link. Hazards come closer together." },
-  hard:   { speed: 7.4, gravity: 0.84, spawn: 58,  desc: "Saturated link. Barely a gap between drops." },
-};
+  hard:   { speed: 7.4, gravity: 0.84, spawn: 58,  desc: "Saturated link. Barely a gap between drops." } };
 
 const HAZARDS = [
   { label: "COLLISION", color: "#ff4d6d", kind: "ground" as const },
@@ -36,8 +34,7 @@ const GROUND = H - 46;
 export default function PacketRun({
   best,
   scoringLeft,
-  submit,
-}: {
+  submit }: {
   best: number;
   scoringLeft: number;
   submit: (d: Difficulty, score: number) => Promise<SubmitResult>;
@@ -56,8 +53,7 @@ export default function PacketRun({
     y: GROUND, vy: 0, ducking: false, running: false,
     distance: 0, dodged: 0, frame: 0,
     obstacles: [] as { x: number; w: number; h: number; kind: "ground" | "air"; label: string; color: string; passed: boolean }[],
-    cfg: CONFIG.easy,
-  });
+    cfg: CONFIG.easy });
 
   const finish = useCallback(async () => {
     game.current.running = false;
@@ -139,8 +135,7 @@ export default function PacketRun({
           kind: h.kind,
           label: h.label,
           color: h.color,
-          passed: false,
-        });
+          passed: false });
       }
 
       /* move + collide */

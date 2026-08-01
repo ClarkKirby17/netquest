@@ -23,8 +23,7 @@ export default async function SuperAdminDashboard() {
       event: auditLogs.event,
       role: auditLogs.userRole,
       details: auditLogs.details,
-      at: auditLogs.createdAt,
-    })
+      at: auditLogs.createdAt })
     .from(auditLogs)
     .orderBy(desc(auditLogs.id))
     .limit(8);

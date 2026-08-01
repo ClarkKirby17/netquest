@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, PartyPopper, Loader2 } from "lucide-react";
 import { markPageRead } from "../../actions";
-import { Card, Progress, Led } from "@/components/ui";
+import { Card, Progress } from "@/components/ui";
 
 /* One page at a time. A sentinel at the bottom of the page marks it
    read when it scrolls into view — the server still decides whether
@@ -20,8 +20,7 @@ export default function Reader({
   startPage,
   completed,
   nextLessonId,
-  position,
-}: {
+  position }: {
   lessonId: number;
   moduleId: number;
   moduleNumber: number;
@@ -131,9 +130,7 @@ export default function Reader({
       </Link>
 
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Led state={done ? "done" : "live"} />
-          <span className="font-[family-name:var(--font-mono-src)] text-[.68rem] uppercase tracking-[.14em] text-[var(--color-muted)]">
+        <div className="flex items-center gap-2"><span className="font-[family-name:var(--font-mono-src)] text-[.68rem] uppercase tracking-[.14em] text-[var(--color-muted)]">
             lesson {position.index} of {position.total}
           </span>
         </div>

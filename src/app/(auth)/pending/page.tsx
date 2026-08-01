@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { Led } from "@/components/ui";
-
 export default function PendingPage() {
   return (
     <>
-      <span className="nq-eyebrow">
-        <Led state="live" />
-        email verified
+      <span className="nq-eyebrow">email verified
       </span>
       <h1 className="mt-4 font-[family-name:var(--font-display-src)] text-3xl font-bold tracking-tight">
         You&apos;re in the queue

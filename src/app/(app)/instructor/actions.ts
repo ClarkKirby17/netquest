@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import {
   db, users, studentProfiles, notifications, auditLogs, gamification,
 } from "@/db";
+import bcrypt from "bcryptjs";
 import { requireRole } from "@/lib/guard";
 
 /* ─────────────────────────── approvals ───────────────────────────
@@ -103,4 +104,49 @@ export async function verifyStudentEmail(formData: FormData) {
   });
 
   revalidatePath("/instructor/approvals");
+}
+
+/**
+ * Temporary password for one of this instructor's own students.
+ * Scoped by instructorId, so it can only ever touch their own roster.
+ */
+export async function resetStudentPassword(
+  _prev: { ok?: string; error?: string; tempPassword?: string },
+  formData: FormData
+): Promise<{ ok?: string; error?: string; tempPassword?: string }> {
+  const me = await requireRole("instructor");
+  const studentId = Number(formData.get("userId"));
+  if (!studentId) return { error: "No student selected." };
+
+  const profile = await db.query.studentProfiles.findFirst({
+    where: and(
+      eq(studentProfiles.userId, studentId),
+      eq(studentProfiles.instructorId, me.userId)
+    ),
+  });
+  if (!profile) return { error: "That student isn't on your roster." };
+
+  const student = await db.query.users.findFirst({ where: eq(users.id, studentId) });
+  if (!student) return { error: "Account not found." };
+
+  const temp = "NQ-" + Math.random().toString(36).slice(2, 10);
+  await db
+    .update(users)
+    .set({ passwordHash: await bcrypt.hash(temp, 12) })
+    .where(eq(users.id, studentId));
+
+  await db.insert(notifications).values({
+    userId: studentId,
+    title: "Your password was reset",
+    body: "Your instructor issued you a temporary password. Change it in Account settings once you're in.",
+    link: "/account",
+  });
+  await db.insert(auditLogs).values({
+    event: "user.password_reset",
+    userId: me.userId,
+    userRole: "instructor",
+    details: student.email,
+  });
+
+  return { ok: `Temporary password for ${student.fullName}:`, tempPassword: temp };
 }

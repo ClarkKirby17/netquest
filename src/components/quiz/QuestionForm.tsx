@@ -11,8 +11,7 @@ const labelCx =
 export default function QuestionForm({
   quizId,
   moduleId,
-  scope = "mine",
-}: {
+  scope = "mine" }: {
   quizId: number;
   moduleId: number;
   scope?: "mine" | "default";

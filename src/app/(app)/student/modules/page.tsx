@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BookOpen, Lock, Check, ArrowRight } from "lucide-react";
 import { requireRole } from "@/lib/guard";
 import { modulesForStudent } from "@/lib/learning";
-import { Card, PageHead, Progress, Pill, Led, Empty } from "@/components/ui";
+import { Card, PageHead, Progress, Pill, Empty } from "@/components/ui";
 
 export default async function StudentModulesPage() {
   const me = await requireRole("student");
@@ -34,9 +34,7 @@ export default async function StudentModulesPage() {
                 hover={!locked}
                 className={locked ? "p-5 opacity-55" : "p-5 h-full"}
               >
-                <div className="flex items-start gap-3">
-                  <Led state={done ? "done" : locked ? "off" : "live"} className="mt-2" />
-                  <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-3"><div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
                         M{m.moduleNumber}

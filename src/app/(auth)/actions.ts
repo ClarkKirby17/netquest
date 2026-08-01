@@ -248,7 +248,18 @@ async function issueCode(email: string): Promise<string | null> {
     codeHash: await bcrypt.hash(code, 10),
     expiresAt: new Date(Date.now() + 15 * 60 * 1000),
   });
+
   const { delivered } = await sendVerificationCode(email, code);
+
+  /* Record failures so an admin can see, in the audit log, that the
+     problem was delivery rather than the person mistyping a code. */
+  if (!delivered) {
+    await db.insert(auditLogs).values({
+      event: "email.send_failed",
+      details: email,
+    });
+  }
+
   const dev = !delivered && process.env.NODE_ENV !== "production";
   return dev ? code : null;
 }

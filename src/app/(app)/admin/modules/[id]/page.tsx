@@ -4,7 +4,7 @@ import { asc, eq } from "drizzle-orm";
 import { Plus, FileText } from "lucide-react";
 import { db, modules, lessons } from "@/db";
 import { requireRole } from "@/lib/guard";
-import { Card, CardHead, PageHead, Table, Th, Td, Pill, Led, Empty } from "@/components/ui";
+import { Card, CardHead, PageHead, Table, Th, Td, Pill, Empty } from "@/components/ui";
 import { updateModule, deleteModule, deleteLesson, togglePublish } from "../../actions";
 
 const inputCx =
@@ -105,7 +105,7 @@ export default async function ModuleDetail({ params }: { params: Promise<{ id: s
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[.95rem] font-semibold">Module details</h2>
-              {mod.isPublished ? <Pill tone="signal"><Led state="done" />live</Pill> : <Pill>draft</Pill>}
+              {mod.isPublished ? <Pill tone="signal">live</Pill> : <Pill>draft</Pill>}
             </div>
             <form action={updateModule} className="space-y-4">
               <input type="hidden" name="id" value={mod.id} />

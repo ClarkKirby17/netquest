@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import type { Difficulty } from "@/db/schema";
 import {
   TitleScreen, Countdown, Hud, HudItem, Summary, Stage,
-  useArcadeSound, type SubmitResult,
-} from "./shell";
+  useArcadeSound, type SubmitResult } from "./shell";
 import { cn } from "@/lib/utils";
 
 export type DoorQuestion = {
@@ -24,8 +23,7 @@ const CONFIG: Record<
 > = {
   easy:   { lives: Infinity, seconds: 0,  perRoom: 80,  combo: 5,  desc: "Fundamentals. No lives, no timer — just doors." },
   medium: { lives: 3,        seconds: 20, perRoom: 90,  combo: 8,  desc: "Subnets and protocols. 3 lives, 20s per room." },
-  hard:   { lives: 1,        seconds: 12, perRoom: 100, combo: 12, desc: "One life, 12 seconds, and the corridor darkens." },
-};
+  hard:   { lives: 1,        seconds: 12, perRoom: 100, combo: 12, desc: "One life, 12 seconds, and the corridor darkens." } };
 
 type Phase = "title" | "count" | "play" | "over";
 
@@ -33,8 +31,7 @@ export default function DoorChallenge({
   best,
   scoringLeft,
   fetchQuestions,
-  submit,
-}: {
+  submit }: {
   best: number;
   scoringLeft: number;
   fetchQuestions: (d: Difficulty) => Promise<DoorQuestion[]>;
@@ -127,8 +124,7 @@ export default function DoorChallenge({
       sound.bad();
       setFeedback({
         ok: false,
-        text: `Door ${q.correctOption.toUpperCase()} was correct. ${q.explanation}`,
-      });
+        text: `Door ${q.correctOption.toUpperCase()} was correct. ${q.explanation}` });
       setTimeout(() => { setShake(false); setFlash(null); }, 400);
       setTimeout(() => advance(nextLives), 1900);
     }
@@ -145,8 +141,7 @@ export default function DoorChallenge({
     sound.bad();
     setFeedback({
       ok: false,
-      text: `Time ran out. Door ${q.correctOption.toUpperCase()} was correct. ${q.explanation}`,
-    });
+      text: `Time ran out. Door ${q.correctOption.toUpperCase()} was correct. ${q.explanation}` });
     setTimeout(() => { setShake(false); setFlash(null); }, 400);
     setTimeout(() => advance(nextLives), 1900);
   }

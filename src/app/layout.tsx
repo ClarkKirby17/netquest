@@ -6,24 +6,20 @@ const display = Space_Grotesk({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display-src",
-  display: "swap",
-});
+  display: "swap" });
 const body = Inter({
   subsets: ["latin"],
   variable: "--font-body-src",
-  display: "swap",
-});
+  display: "swap" });
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono-src",
-  display: "swap",
-});
+  display: "swap" });
 
 export const metadata: Metadata = {
   title: "NetQuest — learn networking by playing it",
   description:
-    "A gamified networking academy: guided modules, real quizzes, an arcade of networking games, and live class leaderboards.",
-};
+    "A gamified networking academy: guided modules, real quizzes, an arcade of networking games, and live class leaderboards." };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

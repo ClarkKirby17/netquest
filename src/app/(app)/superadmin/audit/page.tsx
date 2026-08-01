@@ -21,8 +21,7 @@ function toneFor(event: string): "signal" | "warn" | "alert" | "wire" | "muted" 
 }
 
 export default async function AuditPage({
-  searchParams,
-}: {
+  searchParams }: {
   searchParams: Promise<{ q?: string; role?: string; from?: string; to?: string; page?: string }>;
 }) {
   await requireRole("superadmin");
@@ -60,8 +59,7 @@ export default async function AuditPage({
       role: auditLogs.userRole,
       details: auditLogs.details,
       at: auditLogs.createdAt,
-      actor: users.fullName,
-    })
+      actor: users.fullName })
     .from(auditLogs)
     .leftJoin(users, eq(users.id, auditLogs.userId))
     .where(where)
@@ -146,8 +144,7 @@ export default async function AuditPage({
                       <span className="whitespace-nowrap font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
                         {new Date(r.at).toLocaleString([], {
                           month: "short", day: "numeric",
-                          hour: "2-digit", minute: "2-digit",
-                        })}
+                          hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </Td>
                     <Td><Pill tone={toneFor(r.event)}>{r.event}</Pill></Td>

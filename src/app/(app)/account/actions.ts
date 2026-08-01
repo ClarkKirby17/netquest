@@ -79,16 +79,32 @@ export async function requestPasswordCode(
 
   const { delivered } = await sendVerificationCode(row.email, code);
   await db.insert(auditLogs).values({
-    event: "password.code_sent",
+    event: delivered ? "password.code_sent" : "password.code_send_failed",
     userId: user.id,
     userRole: user.role,
     details: row.email,
   });
 
+  /* Say so when the send failed rather than leaving someone watching an
+     empty inbox. In development the code is shown; in production the
+     honest answer is to ask an admin, who can reset it directly. */
+  if (!delivered) {
+    return process.env.NODE_ENV !== "production"
+      ? {
+          stage: "code-sent",
+          ok: `Email isn't configured, so the code is shown below.`,
+          devCode: code,
+        }
+      : {
+          stage: "idle",
+          error:
+            "We couldn't send the code — the email may be undeliverable. Ask an admin to reset your password instead.",
+        };
+  }
+
   return {
     stage: "code-sent",
     ok: `We sent a 6-digit code to ${row.email}. It expires in 15 minutes.`,
-    devCode: !delivered && process.env.NODE_ENV !== "production" ? code : undefined,
   };
 }
 

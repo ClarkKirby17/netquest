@@ -15,8 +15,7 @@ const initial: ActionState = {};
 export default function RegisterForm({
   courses,
   sections,
-  instructors,
-}: {
+  instructors }: {
   courses: Course[];
   sections: Section[];
   instructors: Instructor[];
@@ -159,8 +158,7 @@ function ErrorLine({ msg }: { msg?: string }) {
 }
 
 function Field({
-  label, name, type, placeholder, error,
-}: {
+  label, name, type, placeholder, error }: {
   label: string; name: string; type: string; placeholder?: string; error?: string;
 }) {
   return (
@@ -173,8 +171,7 @@ function Field({
 }
 
 function Select({
-  label, name, value, onChange, options, placeholder, disabled, error, uncontrolled,
-}: {
+  label, name, value, onChange, options, placeholder, disabled, error, uncontrolled }: {
   label: string;
   name: string;
   value: number | "";

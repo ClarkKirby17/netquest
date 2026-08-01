@@ -8,8 +8,7 @@ const labelCx =
 
 export default function LessonForm({
   moduleId,
-  lesson,
-}: {
+  lesson }: {
   moduleId: number;
   lesson?: { id: number; title: string; contentHtml: string };
 }) {

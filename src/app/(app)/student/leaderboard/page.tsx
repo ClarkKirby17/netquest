@@ -13,8 +13,7 @@ const SCOPES = [
 ] as const;
 
 export default async function LeaderboardPage({
-  searchParams,
-}: {
+  searchParams }: {
   searchParams: Promise<{ scope?: string }>;
 }) {
   const me = await requireRole("student");
@@ -24,8 +23,7 @@ export default async function LeaderboardPage({
     : "class";
 
   const mine = await db.query.studentProfiles.findFirst({
-    where: eq(studentProfiles.userId, me.userId),
-  });
+    where: eq(studentProfiles.userId, me.userId) });
 
   const rows = await db
     .select({
@@ -36,8 +34,7 @@ export default async function LeaderboardPage({
       badges: studentProfiles.badgeCount,
       instructorId: studentProfiles.instructorId,
       sectionId: studentProfiles.sectionId,
-      level: gamification.level,
-    })
+      level: gamification.level })
     .from(studentProfiles)
     .innerJoin(users, eq(users.id, studentProfiles.userId))
     .innerJoin(sections, eq(sections.id, studentProfiles.sectionId))

@@ -6,7 +6,7 @@ import { db, modules } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { lessonsForStudent, modulesForStudent } from "@/lib/learning";
 import { quizStateFor } from "@/lib/quiz";
-import { Card, CardHead, PageHead, Progress, Pill, Led, Empty } from "@/components/ui";
+import { Card, CardHead, PageHead, Progress, Pill, Empty } from "@/components/ui";
 
 export default async function ModuleLessonsPage({ params }: { params: Promise<{ id: string }> }) {
   const me = await requireRole("student");
@@ -53,9 +53,7 @@ export default async function ModuleLessonsPage({ params }: { params: Promise<{ 
                     "flex items-center gap-4 px-5 py-4 transition-colors " +
                     (locked ? "opacity-50" : "hover:bg-[rgba(255,255,255,.02)]")
                   }
-                >
-                  <Led state={l.completed ? "done" : locked ? "off" : "live"} />
-                  <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
+                ><span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
                     {mod.moduleNumber}.{l.order}
                   </span>
                   <span className={locked ? "flex-1 text-[var(--color-muted)]" : "flex-1 font-medium"}>
@@ -80,9 +78,7 @@ export default async function ModuleLessonsPage({ params }: { params: Promise<{ 
 
       {quiz.status !== "none" && (
         <Card className="mt-4 p-5">
-          <div className="flex flex-wrap items-center gap-4">
-            <Led state={quiz.status === "passed" ? "done" : quiz.status === "available" ? "live" : "off"} />
-            <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-4"><div className="min-w-0 flex-1">
               <h3 className="font-[family-name:var(--font-display-src)] text-lg font-bold">
                 {quiz.title}
               </h3>

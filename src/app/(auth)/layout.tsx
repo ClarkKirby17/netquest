@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Led } from "@/components/ui";
-
 /* Split screen: form on the left, a live status panel on the right.
    The panel is the same visual language as the arcade — this is the
    first thing a student sees, so it should feel like the product. */
@@ -8,9 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="relative z-10 flex min-h-screen">
       <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-[52%] lg:px-16">
-        <Link href="/" className="mb-10 flex items-center gap-2.5">
-          <Led state="live" />
-          <span className="font-[family-name:var(--font-display-src)] text-lg font-bold tracking-tight">
+        <Link href="/" className="mb-10 flex items-center gap-2.5"><span className="font-[family-name:var(--font-display-src)] text-lg font-bold tracking-tight">
             NET<span className="text-[var(--color-signal)]">QUEST</span>
           </span>
         </Link>
@@ -20,9 +16,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* right panel — hidden on small screens */}
       <aside className="relative hidden overflow-hidden border-l border-[var(--color-line)] bg-[var(--color-deep)] lg:block lg:w-[48%]">
         <div className="flex h-full flex-col justify-center px-14">
-          <span className="nq-eyebrow">
-            <Led state="live" />
-            link established
+          <span className="nq-eyebrow">link established
           </span>
 
           <h2 className="mt-5 font-[family-name:var(--font-display-src)] text-3xl font-bold leading-tight tracking-tight">

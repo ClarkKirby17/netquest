@@ -16,11 +16,9 @@ export default async function InstructorQuizzesPage() {
   const rows: QuizRow[] = await Promise.all(
     mods.map(async (m) => {
       const mine = await db.query.quizzes.findFirst({
-        where: and(eq(quizzes.moduleId, m.id), eq(quizzes.instructorId, me.userId)),
-      });
+        where: and(eq(quizzes.moduleId, m.id), eq(quizzes.instructorId, me.userId)) });
       const fallback = await db.query.quizzes.findFirst({
-        where: and(eq(quizzes.moduleId, m.id), isNull(quizzes.instructorId)),
-      });
+        where: and(eq(quizzes.moduleId, m.id), isNull(quizzes.instructorId)) });
 
       const countFor = async (quizId?: number) => {
         if (!quizId) return 0;
@@ -39,8 +37,7 @@ export default async function InstructorQuizzesPage() {
         published: mine?.isPublished ?? null,
         passingScore: mine?.passingScore ?? null,
         questionCount: await countFor(mine?.id),
-        defaultQuestionCount: fallback?.isPublished ? await countFor(fallback.id) : 0,
-      };
+        defaultQuestionCount: fallback?.isPublished ? await countFor(fallback.id) : 0 };
     })
   );
 

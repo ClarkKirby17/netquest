@@ -3,7 +3,7 @@ import { DoorOpen, Gauge, Terminal, Trophy, Zap, Flame } from "lucide-react";
 import { requireRole } from "@/lib/guard";
 import { GAMES, hubStats, SCORING_RUNS_PER_DAY } from "@/lib/arcade";
 import { stateFor } from "@/lib/gamification";
-import { Card, PageHead, Progress, Pill, Led } from "@/components/ui";
+import { Card, PageHead, Progress, Pill } from "@/components/ui";
 import type { GameSlug } from "@/db/schema";
 
 const ICONS = { door: DoorOpen, "packet-run": Gauge, "net-cli": Terminal };

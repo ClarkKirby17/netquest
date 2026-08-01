@@ -12,8 +12,7 @@ import { loadDoorQuestions, loadCliMission, recordRun } from "../actions";
 export default function GameFrame({
   slug,
   best,
-  scoringLeft,
-}: {
+  scoringLeft }: {
   slug: GameSlug;
   best: number;
   scoringLeft: number;
@@ -40,8 +39,7 @@ export default function GameFrame({
       descriptions={{
         easy: "Short mission — get in and name the device.",
         medium: "Bring an interface up with an address.",
-        hard: "Full bring-up: addressing, security, banner.",
-      }}
+        hard: "Full bring-up: addressing, security, banner." }}
       fetchMission={(d) => loadCliMission(d)}
       submit={submit}
     />

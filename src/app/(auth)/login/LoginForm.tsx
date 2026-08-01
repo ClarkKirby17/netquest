@@ -38,8 +38,7 @@ export default function LoginForm() {
 }
 
 function Field({
-  label, name, type, placeholder, autoComplete,
-}: {
+  label, name, type, placeholder, autoComplete }: {
   label: string; name: string; type: string; placeholder?: string; autoComplete?: string;
 }) {
   return (

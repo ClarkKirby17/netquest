@@ -1,8 +1,7 @@
 "use client";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-} from "recharts";
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const GRID = "rgba(120,180,255,.08)";
 const AXIS = "#5c718f";
@@ -12,13 +11,11 @@ const tooltipStyle = {
   border: "1px solid #1e2c44",
   borderRadius: 10,
   fontSize: 12,
-  color: "#e8f4ff",
-};
+  color: "#e8f4ff" };
 
 export function PercentBars({
   data,
-  color = "#00f5a0",
-}: {
+  color = "#00f5a0" }: {
   data: { label: string; title?: string; value: number; attempts?: number }[];
   color?: string;
 }) {
@@ -60,8 +57,7 @@ export function PercentBars({
 
 export function CountBars({
   data,
-  colors = ["#00f5a0", "#00c9ff", "#f6a821"],
-}: {
+  colors = ["#00f5a0", "#00c9ff", "#f6a821"] }: {
   data: { label: string; value: number }[];
   colors?: string[];
 }) {

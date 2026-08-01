@@ -3,7 +3,7 @@ import { GraduationCap, Lock, Check, Clock, Ban } from "lucide-react";
 import { requireRole } from "@/lib/guard";
 import { modulesForStudent } from "@/lib/learning";
 import { quizStateFor } from "@/lib/quiz";
-import { Card, CardHead, PageHead, Pill, Led, Empty, Progress } from "@/components/ui";
+import { Card, CardHead, PageHead, Pill, Empty, Progress } from "@/components/ui";
 
 export default async function StudentQuizzesPage() {
   const me = await requireRole("student");
@@ -12,8 +12,7 @@ export default async function StudentQuizzesPage() {
   const rows = await Promise.all(
     cards.map(async (c) => ({
       card: c,
-      quiz: await quizStateFor(me.userId, c.id, c.lessonsComplete),
-    }))
+      quiz: await quizStateFor(me.userId, c.id, c.lessonsComplete) }))
   );
   const withQuiz = rows.filter((r) => r.quiz.status !== "none");
 
@@ -37,12 +36,7 @@ export default async function StudentQuizzesPage() {
         <div className="space-y-4">
           {withQuiz.map(({ card, quiz }) => (
             <Card key={card.id} className="p-5">
-              <div className="flex flex-wrap items-start gap-4">
-                <Led
-                  state={quiz.status === "passed" ? "done" : quiz.status === "available" ? "live" : "off"}
-                  className="mt-2"
-                />
-                <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-start gap-4"><div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
                       M{card.moduleNumber}

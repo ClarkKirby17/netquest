@@ -5,12 +5,10 @@ import { Check, Square } from "lucide-react";
 import type { Difficulty } from "@/db/schema";
 import {
   TitleScreen, Countdown, Hud, HudItem, Summary,
-  useArcadeSound, type SubmitResult,
-} from "./shell";
+  useArcadeSound, type SubmitResult } from "./shell";
 import {
   isObjectiveMet, INTERFACES as IFACES,
-  type DeviceState as State, type PlayableMission,
-} from "@/lib/cli-types";
+  type DeviceState as State, type PlayableMission } from "@/lib/cli-types";
 import { cn } from "@/lib/utils";
 
 /* Net CLI — a simulated device console.
@@ -30,8 +28,7 @@ const freshState = (): State => ({
   vtyLogin: false,
   interfaces: Object.fromEntries(
     IFACES.map((n) => [n, { ip: null, mask: null, up: false, desc: null }])
-  ),
-});
+  ) });
 
 const ipOk = (s: string) =>
   /^\d{1,3}(\.\d{1,3}){3}$/.test(s) && s.split(".").every((o) => Number(o) <= 255);
@@ -41,8 +38,7 @@ export default function NetCli({
   scoringLeft,
   descriptions,
   fetchMission,
-  submit,
-}: {
+  submit }: {
   best: number;
   scoringLeft: number;
   descriptions: Record<Difficulty, string>;
@@ -127,8 +123,7 @@ export default function NetCli({
     const h = state.hostname;
     return {
       user: `${h}>`, priv: `${h}#`, conf: `${h}(config)#`,
-      "conf-if": `${h}(config-if)#`, "conf-line": `${h}(config-line)#`,
-    }[mode];
+      "conf-if": `${h}(config-if)#`, "conf-line": `${h}(config-line)#` }[mode];
   }
 
   function abbrev(word: string, candidates: string[]) {
@@ -240,8 +235,7 @@ export default function NetCli({
         if (parts[1] && abbrev(parts[1], ["address"]) === "address" && ipOk(parts[2] ?? "") && ipOk(parts[3] ?? "")) {
           setState((s) => ({
             ...s,
-            interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], ip: parts[2], mask: parts[3] } },
-          }));
+            interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], ip: parts[2], mask: parts[3] } } }));
           sound.click();
           return;
         }
@@ -251,8 +245,7 @@ export default function NetCli({
         if (parts[1] && abbrev(parts[1], ["shutdown"]) === "shutdown") {
           setState((s) => ({
             ...s,
-            interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], up: true } },
-          }));
+            interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], up: true } } }));
           say(`%LINK-5-CHANGED: Interface ${curIf}, changed state to up`, "dim");
           say(`%LINEPROTO-5-UPDOWN: Line protocol on Interface ${curIf}, changed state to up`, "dim");
           sound.good();
@@ -263,8 +256,7 @@ export default function NetCli({
       if (c === "shutdown") {
         setState((s) => ({
           ...s,
-          interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], up: false } },
-        }));
+          interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], up: false } } }));
         say(`%LINK-5-CHANGED: Interface ${curIf}, changed state to administratively down`, "dim");
         return;
       }
@@ -272,8 +264,7 @@ export default function NetCli({
         const text = parts.slice(1).join(" ");
         setState((s) => ({
           ...s,
-          interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], desc: text } },
-        }));
+          interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], desc: text } } }));
         sound.click();
         return;
       }
@@ -304,8 +295,7 @@ export default function NetCli({
       priv: ["configure     Enter configuration mode", "show          Show running system information", "ping          Send echo messages", "write         Write running config to memory", "disable       Turn off privileged commands"],
       conf: ["hostname      Set the system's name", "interface     Select an interface", "line          Configure a terminal line", "banner        Define a login banner", "end           Exit configure mode"],
       "conf-if": ["ip address    Set the interface address", "no shutdown   Enable the interface", "shutdown      Disable the interface", "description   Describe the interface", "exit          Leave interface config"],
-      "conf-line": ["password      Set a password", "login         Require password checking", "exit          Leave line config"],
-    };
+      "conf-line": ["password      Set a password", "login         Require password checking", "exit          Leave line config"] };
     H[mode].forEach((l) => say("  " + l, "dim"));
   }
 
@@ -479,8 +469,7 @@ export default function NetCli({
               style={{
                 color:
                   l.tone === "err" ? "var(--color-alert)" :
-                  l.tone === "dim" ? "rgba(0,245,160,.55)" : undefined,
-              }}
+                  l.tone === "dim" ? "rgba(0,245,160,.55)" : undefined }}
             >
               {l.text}
             </div>

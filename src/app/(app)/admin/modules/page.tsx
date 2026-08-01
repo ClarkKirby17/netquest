@@ -3,7 +3,7 @@ import { asc, eq, count } from "drizzle-orm";
 import { Layers, Plus } from "lucide-react";
 import { db, modules, lessons } from "@/db";
 import { requireRole } from "@/lib/guard";
-import { Card, CardHead, PageHead, Table, Th, Td, Pill, Led, Empty } from "@/components/ui";
+import { Card, CardHead, PageHead, Table, Th, Td, Pill, Empty } from "@/components/ui";
 
 export default async function ModulesPage() {
   await requireRole("admin", "superadmin");
@@ -14,8 +14,7 @@ export default async function ModulesPage() {
       n: modules.moduleNumber,
       title: modules.title,
       published: modules.isPublished,
-      lessonCount: count(lessons.id),
-    })
+      lessonCount: count(lessons.id) })
     .from(modules)
     .leftJoin(lessons, eq(lessons.moduleId, modules.id))
     .groupBy(modules.id)
@@ -56,7 +55,7 @@ export default async function ModulesPage() {
                   <Td className="text-[var(--color-muted)]">{m.lessonCount}</Td>
                   <Td>
                     {m.published
-                      ? <Pill tone="signal"><Led state="done" />live</Pill>
+                      ? <Pill tone="signal">live</Pill>
                       : <Pill>draft</Pill>}
                   </Td>
                   <Td className="text-right">

@@ -1,8 +1,7 @@
 import Link from "next/link";
 import {
   BookOpen, Trophy, Terminal, DoorOpen, Gauge, ShieldCheck,
-  BarChart3, GraduationCap, ArrowRight, Mail, MapPin,
-} from "lucide-react";
+  BarChart3, GraduationCap, ArrowRight, Mail, MapPin } from "lucide-react";
 import TraceHero from "@/components/landing/TraceHero";
 import TeamGrid from "@/components/landing/TeamGrid";
 
@@ -20,33 +19,27 @@ const FEATURES = [
   {
     icon: BookOpen,
     title: "Modules that unlock in order",
-    body: "Lessons open page by page and mark themselves complete as you read. Module two stays sealed until module one is done — the server decides, not the browser.",
-  },
+    body: "Lessons open page by page and mark themselves complete as you read. Module two stays sealed until module one is done — the server decides, not the browser." },
   {
     icon: GraduationCap,
     title: "Quizzes that gate progress",
-    body: "Every module ends with a quiz your instructor wrote. Pass it to move on, with attempt limits, cooldowns, and a full answer review afterwards.",
-  },
+    body: "Every module ends with a quiz your instructor wrote. Pass it to move on, with attempt limits, cooldowns, and a full answer review afterwards." },
   {
     icon: Terminal,
     title: "Three arcade games",
-    body: "A door challenge, a packet running a congested link, and a real command-line terminal. Every run is scored and every score counts.",
-  },
+    body: "A door challenge, a packet running a congested link, and a real command-line terminal. Every run is scored and every score counts." },
   {
     icon: Trophy,
     title: "XP, badges, streaks",
-    body: "Level up from Cable Apprentice to Network Legend. Keep a daily streak, collect twelve badges, and hold your place on the class leaderboard.",
-  },
+    body: "Level up from Cable Apprentice to Network Legend. Keep a daily streak, collect twelve badges, and hold your place on the class leaderboard." },
   {
     icon: BarChart3,
     title: "Analytics instructors use",
-    body: "See which lesson a class stalls on, which quiz question everyone misses, and export it all to a spreadsheet in one click.",
-  },
+    body: "See which lesson a class stalls on, which quiz question everyone misses, and export it all to a spreadsheet in one click." },
   {
     icon: ShieldCheck,
     title: "Approved, not open",
-    body: "Students register into a real class and an instructor approves them. Nobody wanders in, and every roster stays accurate.",
-  },
+    body: "Students register into a real class and an instructor approves them. Nobody wanders in, and every roster stays accurate." },
 ];
 
 const GAMES = [
@@ -54,38 +47,32 @@ const GAMES = [
     icon: DoorOpen,
     name: "Door Challenge",
     line: "Three doors, one right answer. Pick correctly and the corridor takes you deeper; pick wrong and it slams.",
-    tags: ["subnetting", "protocols", "devices"],
-  },
+    tags: ["subnetting", "protocols", "devices"] },
   {
     icon: Gauge,
     name: "Packet Run",
     line: "You are a packet on a congested link. Jump collisions, dodge dropped frames, and see how far the wire takes you.",
-    tags: ["latency", "collisions", "reflex"],
-  },
+    tags: ["latency", "collisions", "reflex"] },
   {
     icon: Terminal,
     name: "Net CLI",
     line: "A live terminal with real command syntax. Complete the mission — any valid path to the right configuration counts.",
-    tags: ["ip config", "interfaces", "diagnostics"],
-  },
+    tags: ["ip config", "interfaces", "diagnostics"] },
 ];
 
 const STEPS = [
   {
     k: "01",
     title: "Register into your class",
-    body: "Pick your course, section, and instructor. Your instructor approves the request, so the roster is right from day one.",
-  },
+    body: "Pick your course, section, and instructor. Your instructor approves the request, so the roster is right from day one." },
   {
     k: "02",
     title: "Work through the modules",
-    body: "Read lessons page by page, then pass the module quiz to unlock what comes next. Points and XP accumulate as you go.",
-  },
+    body: "Read lessons page by page, then pass the module quiz to unlock what comes next. Points and XP accumulate as you go." },
   {
     k: "03",
     title: "Play, compete, finish",
-    body: "Sharpen the same skills in the arcade, climb your class leaderboard, and finish with a verifiable certificate.",
-  },
+    body: "Sharpen the same skills in the arcade, climb your class leaderboard, and finish with a verifiable certificate." },
 ];
 
 export default function LandingPage() {
@@ -94,9 +81,7 @@ export default function LandingPage() {
       {/* ─────────────── nav ─────────────── */}
       <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[rgba(7,13,22,.82)] backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="led led-live" aria-hidden />
-            <span className="font-[family-name:var(--font-display-src)] text-lg font-bold tracking-tight">
+          <Link href="/" className="flex items-center gap-2.5"><span className="font-[family-name:var(--font-display-src)] text-lg font-bold tracking-tight">
               NET<span className="text-[var(--color-signal)]">QUEST</span>
             </span>
           </Link>
@@ -129,9 +114,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-5 pt-20 pb-24">
         <div className="grid items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
           <div>
-            <span className="nq-eyebrow">
-              <span className="led led-live" aria-hidden />
-              gamified networking academy
+            <span className="nq-eyebrow">gamified networking academy
             </span>
 
             <h1 className="mt-5 font-[family-name:var(--font-display-src)] text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
@@ -178,7 +161,7 @@ export default function LandingPage() {
       {/* ─────────────── features ─────────────── */}
       <section id="features" className="border-t border-[var(--color-line)] bg-[var(--color-deep)]">
         <div className="mx-auto max-w-6xl px-5 py-24">
-          <span className="nq-eyebrow"><span className="led led-wire" aria-hidden />what you get</span>
+          <span className="nq-eyebrow">what you get</span>
           <h2 className="mt-4 max-w-2xl font-[family-name:var(--font-display-src)] text-4xl font-bold tracking-tight">
             A full academy, not a quiz app
           </h2>
@@ -199,7 +182,7 @@ export default function LandingPage() {
 
       {/* ─────────────── how it works ─────────────── */}
       <section id="how" className="mx-auto max-w-6xl px-5 py-24">
-        <span className="nq-eyebrow"><span className="led led-wire" aria-hidden />the path</span>
+        <span className="nq-eyebrow">the path</span>
         <h2 className="mt-4 font-[family-name:var(--font-display-src)] text-4xl font-bold tracking-tight">
           Sign up to certificate
         </h2>
@@ -220,7 +203,7 @@ export default function LandingPage() {
       {/* ─────────────── games ─────────────── */}
       <section id="games" className="border-y border-[var(--color-line)] bg-[var(--color-deep)]">
         <div className="mx-auto max-w-6xl px-5 py-24">
-          <span className="nq-eyebrow"><span className="led led-live" aria-hidden />the arcade</span>
+          <span className="nq-eyebrow">the arcade</span>
           <h2 className="mt-4 max-w-2xl font-[family-name:var(--font-display-src)] text-4xl font-bold tracking-tight">
             Three games that actually teach
           </h2>
@@ -257,7 +240,7 @@ export default function LandingPage() {
 
       {/* ─────────────── team ─────────────── */}
       <section id="team" className="mx-auto max-w-6xl px-5 py-24">
-        <span className="nq-eyebrow"><span className="led led-done" aria-hidden />built by</span>
+        <span className="nq-eyebrow">built by</span>
         <h2 className="mt-4 font-[family-name:var(--font-display-src)] text-4xl font-bold tracking-tight">
           The team behind NetQuest
         </h2>
@@ -288,11 +271,11 @@ export default function LandingPage() {
           <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
             <span className="flex items-center gap-2">
               <Mail size={13} className="text-[var(--color-signal)]" />
-              netquest@gmail.com
+              team@netquest.academy
             </span>
             <span className="flex items-center gap-2">
               <MapPin size={13} className="text-[var(--color-signal)]" />
-              Valenzuela, Philippines
+              Caloocan, Philippines
             </span>
           </div>
         </div>
@@ -301,9 +284,7 @@ export default function LandingPage() {
       {/* ─────────────── footer ─────────────── */}
       <footer className="border-t border-[var(--color-line)] bg-[var(--color-void)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-7">
-          <span className="flex items-center gap-2.5">
-            <span className="led led-done" aria-hidden />
-            <span className="font-[family-name:var(--font-display-src)] font-bold">
+          <span className="flex items-center gap-2.5"><span className="font-[family-name:var(--font-display-src)] font-bold">
               NET<span className="text-[var(--color-signal)]">QUEST</span>
             </span>
           </span>

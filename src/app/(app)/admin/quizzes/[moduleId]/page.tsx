@@ -5,8 +5,7 @@ import { requireRole } from "@/lib/guard";
 import QuizEditor from "@/components/quiz/QuizEditor";
 
 export default async function AdminQuizEditor({
-  params,
-}: {
+  params }: {
   params: Promise<{ moduleId: string }>;
 }) {
   await requireRole("admin", "superadmin");
@@ -18,8 +17,7 @@ export default async function AdminQuizEditor({
   if (!mod) notFound();
 
   const quiz = await db.query.quizzes.findFirst({
-    where: and(eq(quizzes.moduleId, moduleId), isNull(quizzes.instructorId)),
-  });
+    where: and(eq(quizzes.moduleId, moduleId), isNull(quizzes.instructorId)) });
   if (!quiz) notFound();
 
   const questions = await db

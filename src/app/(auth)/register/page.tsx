@@ -21,8 +21,7 @@ export default async function RegisterPage() {
       .select({
         id: users.id,
         name: users.fullName,
-        sectionId: instructorProfiles.sectionId,
-      })
+        sectionId: instructorProfiles.sectionId })
       .from(users)
       .innerJoin(instructorProfiles, eq(instructorProfiles.userId, users.id))
       .where(eq(users.status, "active"))
@@ -36,8 +35,7 @@ export default async function RegisterPage() {
       instructors={instructorRows.map((i) => ({
         id: i.id,
         name: i.name,
-        sectionId: i.sectionId ?? 0,
-      }))}
+        sectionId: i.sectionId ?? 0 }))}
     />
   );
 }

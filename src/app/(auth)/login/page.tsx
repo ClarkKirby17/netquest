@@ -10,8 +10,7 @@ export const dynamic = "force-dynamic";
 /* ONE login for every role. The account's role decides where you
    land — there is no separate admin URL. */
 export default async function LoginPage({
-  searchParams,
-}: {
+  searchParams }: {
   searchParams: Promise<{ closed?: string; reset?: string }>;
 }) {
   const { closed, reset } = await searchParams;

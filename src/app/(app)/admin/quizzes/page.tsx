@@ -12,8 +12,7 @@ export default async function AdminQuizzesPage() {
   const rows: QuizRow[] = await Promise.all(
     mods.map(async (m) => {
       const q = await db.query.quizzes.findFirst({
-        where: and(eq(quizzes.moduleId, m.id), isNull(quizzes.instructorId)),
-      });
+        where: and(eq(quizzes.moduleId, m.id), isNull(quizzes.instructorId)) });
       let questionCount = 0;
       if (q) {
         const [{ n }] = await db
@@ -29,8 +28,7 @@ export default async function AdminQuizzesPage() {
         quizId: q?.id ?? null,
         published: q?.isPublished ?? null,
         passingScore: q?.passingScore ?? null,
-        questionCount,
-      };
+        questionCount };
     })
   );
 

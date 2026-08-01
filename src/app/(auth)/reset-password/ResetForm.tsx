@@ -12,8 +12,7 @@ const labelCx =
 
 export default function ResetForm({
   email,
-  devCode,
-}: {
+  devCode }: {
   email: string;
   devCode?: string;
 }) {

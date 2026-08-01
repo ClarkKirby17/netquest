@@ -56,8 +56,7 @@ export function useArcadeSound() {
     bad: () => { tone(180, 0.25, "sawtooth", 0.06); tone(120, 0.3, "sawtooth", 0.05, 0.05); },
     tick: () => tone(880, 0.04, "square", 0.03),
     type: () => tone(320 + Math.random() * 120, 0.02, "square", 0.012),
-    levelUp: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.18, "sine", 0.06, i * 0.09)),
-  };
+    levelUp: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.18, "sine", 0.06, i * 0.09)) };
 }
 
 /* ─────────────────────── difficulty picker ─────────────────────── */
@@ -68,8 +67,7 @@ export const DIFFICULTY_META: Record<
 > = {
   easy: { label: "Easy", multiplier: "×1.0", accent: "var(--color-signal)" },
   medium: { label: "Medium", multiplier: "×1.5", accent: "var(--color-warn)" },
-  hard: { label: "Hard", multiplier: "×2.0", accent: "var(--color-alert)" },
-};
+  hard: { label: "Hard", multiplier: "×2.0", accent: "var(--color-alert)" } };
 
 export function TitleScreen({
   name,
@@ -78,8 +76,7 @@ export function TitleScreen({
   best,
   scoringLeft,
   descriptions,
-  onStart,
-}: {
+  onStart }: {
   name: string;
   tagline: string;
   blurb: string;
@@ -90,7 +87,7 @@ export function TitleScreen({
 }) {
   return (
     <div className="flex min-h-[520px] flex-col items-center justify-center px-6 py-12 text-center">
-      <span className="nq-eyebrow"><span className="led led-live" />{tagline}</span>
+      <span className="nq-eyebrow">{tagline}</span>
       <h1 className="mt-4 font-[family-name:var(--font-display-src)] text-4xl font-bold tracking-tight">
         {name}
       </h1>
@@ -161,8 +158,7 @@ export function Countdown({ onDone }: { onDone: () => void }) {
         className="font-[family-name:var(--font-display-src)] text-8xl font-bold text-[var(--color-signal)]"
         style={{
           animation: "arc-pop .7s ease both",
-          textShadow: "0 0 50px rgba(0,245,160,.5)",
-        }}
+          textShadow: "0 0 50px rgba(0,245,160,.5)" }}
       >
         {n > 0 ? n : "GO"}
       </div>
@@ -181,8 +177,7 @@ export function Hud({ children }: { children: React.ReactNode }) {
 }
 
 export function HudItem({
-  label, value, tone = "text",
-}: {
+  label, value, tone = "text" }: {
   label: string;
   value: React.ReactNode;
   tone?: "text" | "signal" | "warn" | "alert";
@@ -191,8 +186,7 @@ export function HudItem({
     text: "var(--color-text)",
     signal: "var(--color-signal)",
     warn: "var(--color-warn)",
-    alert: "var(--color-alert)",
-  }[tone];
+    alert: "var(--color-alert)" }[tone];
   return (
     <span className="flex items-center gap-2">
       <span className="uppercase tracking-[.14em] text-[var(--color-muted)]">{label}</span>
@@ -228,8 +222,7 @@ export function Summary({
   difficulty,
   stats,
   result,
-  onReplay,
-}: {
+  onReplay }: {
   score: number;
   difficulty: Difficulty;
   stats: { label: string; value: React.ReactNode }[];
@@ -266,8 +259,7 @@ export function Summary({
           background: "linear-gradient(135deg,#f6a821,#ffe29a)",
           WebkitBackgroundClip: "text",
           backgroundClip: "text",
-          color: "transparent",
-        }}
+          color: "transparent" }}
       >
         {rankFor(score)}
       </div>
@@ -351,8 +343,7 @@ export function Summary({
 export function Stage({
   children,
   shake,
-  flash,
-}: {
+  flash }: {
   children: React.ReactNode;
   shake?: boolean;
   flash?: "good" | "bad" | null;
@@ -368,8 +359,7 @@ export function Stage({
           style={{
             background:
               flash === "bad" ? "rgba(255,77,109,.16)" : "rgba(0,245,160,.13)",
-            animation: "arc-fade .45s forwards",
-          }}
+            animation: "arc-fade .45s forwards" }}
         />
       )}
       {children}

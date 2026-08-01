@@ -3,7 +3,7 @@ import { and, asc, count, eq } from "drizzle-orm";
 import { UserCheck, Users, Presentation, BookOpen, ArrowRight } from "lucide-react";
 import { db, users, modules, lessons } from "@/db";
 import { requireRole } from "@/lib/guard";
-import { Card, CardHead, PageHead, StatTile, Pill, Led, Table, Th, Td } from "@/components/ui";
+import { Card, CardHead, PageHead, StatTile, Pill, Table, Th, Td } from "@/components/ui";
 
 export default async function AdminDashboard() {
   await requireRole("admin", "superadmin");
@@ -26,8 +26,7 @@ export default async function AdminDashboard() {
       n: modules.moduleNumber,
       title: modules.title,
       published: modules.isPublished,
-      lessonCount: count(lessons.id),
-    })
+      lessonCount: count(lessons.id) })
     .from(modules)
     .leftJoin(lessons, eq(lessons.moduleId, modules.id))
     .groupBy(modules.id)
@@ -76,7 +75,7 @@ export default async function AdminDashboard() {
                 <Td className="text-[var(--color-muted)]">{Number(m.lessonCount)}</Td>
                 <Td>
                   {m.published
-                    ? <Pill tone="signal"><Led state="done" />live</Pill>
+                    ? <Pill tone="signal">live</Pill>
                     : <Pill>hidden</Pill>}
                 </Td>
               </tr>

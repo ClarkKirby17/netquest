@@ -20,8 +20,7 @@ export default async function InstructorMissionsPage() {
         .select()
         .from(cliObjectives)
         .where(eq(cliObjectives.missionId, m.id))
-        .orderBy(asc(cliObjectives.sortOrder), asc(cliObjectives.id)),
-    }))
+        .orderBy(asc(cliObjectives.sortOrder), asc(cliObjectives.id)) }))
   );
 
   const [{ n }] = await db

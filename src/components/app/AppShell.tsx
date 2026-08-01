@@ -6,7 +6,6 @@ import { useEffect, useState, useTransition } from "react";
 import { Menu, X, LogOut, Bell, PanelLeftClose, PanelLeftOpen, Loader2 } from "lucide-react";
 import { NAV, ROLE_LABEL } from "@/lib/nav";
 import type { Role } from "@/db/schema";
-import { Led } from "@/components/ui";
 import ProfileMenu from "./ProfileMenu";
 import { signOutAction } from "@/lib/auth-actions";
 import { cn } from "@/lib/utils";
@@ -18,8 +17,7 @@ export default function AppShell({
   name,
   email,
   children,
-  unread = 0,
-}: {
+  unread = 0 }: {
   role: Role;
   name: string;
   email?: string;
@@ -77,9 +75,7 @@ export default function AppShell({
   const SidebarBody = ({ mini }: { mini: boolean }) => (
     <>
       <div className={cn("flex h-16 items-center", mini ? "justify-center px-0" : "px-5")}>
-        <Link href="/" className="flex items-center gap-2.5" title="NetQuest">
-          <Led state="live" />
-          {!mini && (
+        <Link href="/" className="flex items-center gap-2.5" title="NetQuest">{!mini && (
             <span className="whitespace-nowrap font-[family-name:var(--font-display-src)] text-lg font-bold tracking-tight">
               NET<span className="text-[var(--color-signal)]">QUEST</span>
             </span>
@@ -127,7 +123,6 @@ export default function AppShell({
                 <Icon size={17} className="shrink-0" />
               )}
               {!mini && <span className="whitespace-nowrap">{label}</span>}
-              {!mini && active && !navigating && <Led state="done" className="ml-auto" />}
 
               {mini && (
                 <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md border border-[var(--color-line)] bg-[var(--color-raised)] px-2.5 py-1.5 text-xs text-[var(--color-text)] shadow-lg group-hover:block">

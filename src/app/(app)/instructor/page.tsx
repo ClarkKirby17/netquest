@@ -26,8 +26,7 @@ export default async function InstructorDashboard() {
       id: users.id,
       name: users.fullName,
       section: sections.name,
-      points: studentProfiles.totalPoints,
-    })
+      points: studentProfiles.totalPoints })
     .from(users)
     .innerJoin(studentProfiles, eq(studentProfiles.userId, users.id))
     .innerJoin(sections, eq(sections.id, studentProfiles.sectionId))

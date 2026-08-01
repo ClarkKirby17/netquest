@@ -4,14 +4,14 @@ import { Search, Users as UsersIcon } from "lucide-react";
 import { db, users } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, Table, Th, Td, Pill, Empty } from "@/components/ui";
-import { setUserStatus, verifyUserEmail } from "../actions";
+import { setUserStatus, verifyUserEmail, resetUserPassword } from "../actions";
+import ResetPasswordInline from "@/components/app/ResetPasswordInline";
 import { cn } from "@/lib/utils";
 
 const PER_PAGE = 20;
 
 export default async function UsersPage({
-  searchParams,
-}: {
+  searchParams }: {
   searchParams: Promise<{ q?: string; role?: string; status?: string; page?: string }>;
 }) {
   await requireRole("admin", "superadmin");
@@ -149,6 +149,13 @@ export default async function UsersPage({
                       {u.status === "rejected" && <Pill>rejected</Pill>}
                     </Td>
                     <Td className="text-right">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        <ResetPasswordInline
+                          action={resetUserPassword}
+                          idName="id"
+                          id={u.id}
+                          name={u.fullName}
+                        />
                       {u.status === "active" && (
                         <form action={setUserStatus}>
                           <input type="hidden" name="id" value={u.id} />
@@ -163,6 +170,7 @@ export default async function UsersPage({
                           <button className="btn btn-primary px-3 py-1.5 text-[.82rem]">Reactivate</button>
                         </form>
                       )}
+                      </div>
                     </Td>
                   </tr>
                 ))}

@@ -4,7 +4,7 @@ import { Zap, Trophy, Flame, BookOpen, ArrowRight, Gamepad2 } from "lucide-react
 import { db, gamification, studentProfiles } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { modulesForStudent, overallStats } from "@/lib/learning";
-import { Card, CardHead, PageHead, StatTile, Progress, Pill, Led, Empty } from "@/components/ui";
+import { Card, CardHead, PageHead, StatTile, Progress, Pill, Empty } from "@/components/ui";
 
 const LEVEL_TITLES = [
   "Cable Apprentice", "Packet Pusher", "Frame Forwarder", "Subnet Scout",
@@ -49,7 +49,7 @@ export default async function StudentDashboard() {
         <Card className="mt-4">
           <div className="flex flex-wrap items-center gap-5 p-5">
             <div className="min-w-0 flex-1">
-              <Pill tone="signal"><Led state="live" />in progress</Pill>
+              <Pill tone="signal">in progress</Pill>
               <h3 className="mt-3 font-[family-name:var(--font-display-src)] text-xl font-bold">
                 Module {stats.current.moduleNumber} · {stats.current.title}
               </h3>
@@ -79,9 +79,7 @@ export default async function StudentDashboard() {
           ) : (
             <div className="divide-y divide-[var(--color-line)]">
               {cards.slice(0, 4).map((m) => (
-                <div key={m.id} className="flex items-center gap-4 px-5 py-4">
-                  <Led state={m.state === "completed" ? "done" : m.state === "available" ? "live" : "off"} />
-                  <div className="min-w-0 flex-1">
+                <div key={m.id} className="flex items-center gap-4 px-5 py-4"><div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
                         M{m.moduleNumber}

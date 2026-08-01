@@ -110,36 +110,6 @@
     transform: translateY(-2px);
   }
 
-  /* ---------- SIGNATURE: link LEDs ----------
-     Switch-port activity lights. They encode real state —
-     locked, available, complete — not decoration. */
-  .led {
-    width: 7px;
-    height: 7px;
-    border-radius: 999px;
-    flex: 0 0 7px;
-    background: #24354f;
-    display: inline-block;
-  }
-  .led-live {
-    background: var(--color-signal);
-    box-shadow: 0 0 8px var(--color-signal);
-    animation: led-blink 1.6s steps(1) infinite;
-  }
-  .led-done {
-    background: var(--color-signal);
-    box-shadow: 0 0 6px var(--color-signal);
-  }
-  .led-wire {
-    background: var(--color-wire);
-    box-shadow: 0 0 8px var(--color-wire);
-  }
-
-  @keyframes led-blink {
-    0%, 70% { opacity: 1; }
-    71%, 100% { opacity: 0.25; }
-  }
-
   /* ---------- eyebrow: reads like a status line ---------- */
   .nq-eyebrow {
     font-family: var(--font-mono);

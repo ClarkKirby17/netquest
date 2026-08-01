@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { ArrowLeft, HelpCircle, Copy } from "lucide-react";
-import { Card, CardHead, PageHead, Pill, Led, Empty } from "@/components/ui";
+import { Card, CardHead, PageHead, Pill, Empty } from "@/components/ui";
 import QuestionForm from "./QuestionForm";
 import {
-  updateQuizSettings, toggleQuizPublish, deleteQuestion, copyDefaultQuestions,
-} from "@/lib/quiz-actions";
+  updateQuizSettings, toggleQuizPublish, deleteQuestion, copyDefaultQuestions } from "@/lib/quiz-actions";
 
 const inputCx =
   "w-full rounded-[10px] border border-[var(--color-line)] bg-[rgba(255,255,255,.03)] px-3.5 py-2.5 text-[.925rem] outline-none transition-colors focus:border-[var(--color-signal)]";
@@ -29,8 +28,7 @@ export type QuizEditorProps = {
 };
 
 export default function QuizEditor({
-  scope, moduleId, moduleNumber, moduleTitle, quiz, questions, defaultQuestionCount = 0,
-}: QuizEditorProps) {
+  scope, moduleId, moduleNumber, moduleTitle, quiz, questions, defaultQuestionCount = 0 }: QuizEditorProps) {
   const base = scope === "default" ? "/admin/quizzes" : "/instructor/quizzes";
 
   return (
@@ -76,7 +74,7 @@ export default function QuizEditor({
             sub={`${questions.length} in this quiz`}
             action={
               quiz.isPublished
-                ? <Pill tone="signal"><Led state="done" />live</Pill>
+                ? <Pill tone="signal">live</Pill>
                 : <Pill tone="warn">draft</Pill>
             }
           />

@@ -9,34 +9,21 @@ import type { LucideIcon } from "lucide-react";
    ══════════════════════════════════════════════════════════════ */
 
 /* ---------------------------------------------------------- LED
-   Switch-port activity light. Carries real state, not decoration. */
-export function Led({
-  state = "off",
-  className,
-}: {
+   Retired. The blinking indicator dots were removed from the UI; this
+   renders nothing so existing call sites stay valid. Status is carried
+   by Pill labels and text instead, which is clearer anyway. */
+export function Led(_props: {
   state?: "off" | "live" | "done" | "wire";
   className?: string;
 }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "led",
-        state === "live" && "led-live",
-        state === "done" && "led-done",
-        state === "wire" && "led-wire",
-        className
-      )}
-    />
-  );
+  return null;
 }
 
 /* --------------------------------------------------------- Card */
 export function Card({
   className,
   hover = false,
-  children,
-}: {
+  children }: {
   className?: string;
   hover?: boolean;
   children: React.ReactNode;
@@ -51,8 +38,7 @@ export function Card({
 export function CardHead({
   title,
   sub,
-  action,
-}: {
+  action }: {
   title: string;
   sub?: string;
   action?: React.ReactNode;
@@ -70,18 +56,12 @@ export function CardHead({
 
 /* ------------------------------------------------------- Eyebrow */
 export function Eyebrow({
-  children,
-  led = "live",
-}: {
+  children }: {
   children: React.ReactNode;
+  /* Kept so existing call sites compile; no longer rendered. */
   led?: "live" | "wire" | "done";
 }) {
-  return (
-    <span className="nq-eyebrow">
-      <Led state={led} />
-      {children}
-    </span>
-  );
+  return <span className="nq-eyebrow">{children}</span>;
 }
 
 /* ---------------------------------------------------- Page header */
@@ -89,8 +69,7 @@ export function PageHead({
   eyebrow,
   title,
   sub,
-  action,
-}: {
+  action }: {
   eyebrow?: string;
   title: string;
   sub?: string;
@@ -116,8 +95,7 @@ export function StatTile({
   label,
   value,
   hint,
-  tone = "signal",
-}: {
+  tone = "signal" }: {
   icon?: LucideIcon;
   label: string;
   value: string | number;
@@ -128,8 +106,7 @@ export function StatTile({
     signal: "text-[var(--color-signal)] bg-[var(--color-signal-soft)]",
     wire: "text-[var(--color-wire)] bg-[var(--color-wire-soft)]",
     warn: "text-[var(--color-warn)] bg-[rgba(255,184,77,.1)]",
-    plain: "text-[var(--color-muted)] bg-[rgba(255,255,255,.04)]",
-  };
+    plain: "text-[var(--color-muted)] bg-[rgba(255,255,255,.04)]" };
   return (
     <Card className="p-5">
       <div className="flex items-start gap-3">
@@ -189,8 +166,7 @@ export function Button({
 /* --------------------------------------------------------- Pill */
 export function Pill({
   tone = "muted",
-  children,
-}: {
+  children }: {
   tone?: "signal" | "wire" | "warn" | "alert" | "muted";
   children: React.ReactNode;
 }) {
@@ -199,8 +175,7 @@ export function Pill({
     wire: "border-[rgba(0,201,255,.3)] bg-[var(--color-wire-soft)] text-[var(--color-wire)]",
     warn: "border-[rgba(255,184,77,.3)] bg-[rgba(255,184,77,.1)] text-[var(--color-warn)]",
     alert: "border-[rgba(255,77,109,.3)] bg-[rgba(255,77,109,.1)] text-[var(--color-alert)]",
-    muted: "border-[var(--color-line)] text-[var(--color-muted)]",
-  };
+    muted: "border-[var(--color-line)] text-[var(--color-muted)]" };
   return (
     <span
       className={cn(
@@ -240,8 +215,7 @@ export function Empty({
   icon: Icon,
   title,
   body,
-  action,
-}: {
+  action }: {
   icon?: LucideIcon;
   title: string;
   body?: string;
@@ -296,8 +270,7 @@ export function Td({ children, className }: { children?: React.ReactNode; classN
 /* ------------------------------------------------------- Skeleton */
 export function Skeleton({
   className,
-  style,
-}: {
+  style }: {
   className?: string;
   style?: React.CSSProperties;
 }) {

@@ -4,8 +4,7 @@ import { db, courses, sections, studentProfiles, instructorProfiles } from "@/db
 import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, Table, Th, Td, Pill, Empty } from "@/components/ui";
 import {
-  createCourse, createSection, deleteSection, deleteCourse, renameCourse,
-} from "../actions";
+  createCourse, createSection, deleteSection, deleteCourse, renameCourse } from "../actions";
 
 const inputCx =
   "w-full rounded-[10px] border border-[var(--color-line)] bg-[rgba(255,255,255,.03)] px-3.5 py-2.5 text-[.925rem] outline-none transition-colors placeholder:text-[#3d4f6b] focus:border-[var(--color-signal)]";
@@ -39,15 +38,13 @@ export default async function CoursesPage() {
   const courseUsage = courseRows.map((c) => ({
     ...c,
     sectionCount: secMap.get(c.id) ?? 0,
-    studentCount: stuMap.get(c.id) ?? 0,
-  }));
+    studentCount: stuMap.get(c.id) ?? 0 }));
 
   const sectionRows = await db
     .select({
       id: sections.id,
       name: sections.name,
-      course: courses.name,
-    })
+      course: courses.name })
     .from(sections)
     .innerJoin(courses, eq(courses.id, sections.courseId))
     .orderBy(asc(courses.name), asc(sections.name));
@@ -69,8 +66,7 @@ export default async function CoursesPage() {
   const sectionUsage = sectionRows.map((s) => ({
     ...s,
     studentCount: secStuMap.get(s.id) ?? 0,
-    instructorCount: secInsMap.get(s.id) ?? 0,
-  }));
+    instructorCount: secInsMap.get(s.id) ?? 0 }));
 
   return (
     <>

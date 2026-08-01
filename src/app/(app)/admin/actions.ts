@@ -8,6 +8,7 @@ import {
   instructorProfiles, studentProfiles,
 } from "@/db";
 import { sanitizeHtml } from "@/lib/sanitize";
+import bcrypt from "bcryptjs";
 import { requireRole } from "@/lib/guard";
 
 /* Admin and superadmin share these — superadmin inherits everything. */
@@ -204,6 +205,65 @@ export async function verifyUserEmail(formData: FormData) {
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/approvals");
+}
+
+
+/**
+ * Issue a temporary password for a student or instructor.
+ *
+ * No email involved — the password is shown once to the admin, who
+ * hands it over directly. That makes account recovery possible even
+ * when mail delivery is failing, which is the common case in a school
+ * where addresses are often wrong or full.
+ *
+ * Deliberately cannot target the caller's own account: if resetting
+ * yourself needed nothing but being signed in, anyone at an unlocked
+ * machine could take the account permanently. Admins change their own
+ * password in Account settings, where the current one is required.
+ */
+export async function resetUserPassword(
+  _prev: { ok?: string; error?: string; tempPassword?: string },
+  formData: FormData
+): Promise<{ ok?: string; error?: string; tempPassword?: string }> {
+  const me = await requireRole(...ADMIN);
+  const id = Number(formData.get("id"));
+  if (!id) return { error: "No account selected." };
+
+  if (id === me.userId) {
+    return { error: "Change your own password in Account settings." };
+  }
+
+  const target = await db.query.users.findFirst({ where: eq(users.id, id) });
+  if (!target) return { error: "Account not found." };
+
+  /* Admin and superadmin accounts belong to the superadmin portal. */
+  if (target.role === "admin" || target.role === "superadmin") {
+    return { error: "Admin accounts are reset by the super admin." };
+  }
+
+  const temp = "NQ-" + Math.random().toString(36).slice(2, 10);
+  await db
+    .update(users)
+    .set({ passwordHash: await bcrypt.hash(temp, 12) })
+    .where(eq(users.id, id));
+
+  await db.insert(notifications).values({
+    userId: id,
+    title: "Your password was reset",
+    body: "An admin issued you a temporary password. Change it in Account settings once you're in.",
+    link: "/account",
+  });
+  await db.insert(auditLogs).values({
+    event: "user.password_reset",
+    userId: me.userId,
+    userRole: me.role,
+    details: target.email,
+  });
+
+  return {
+    ok: `Temporary password for ${target.fullName}:`,
+    tempPassword: temp,
+  };
 }
 
 /* ───────────────────────────── users ─────────────────────────────── */

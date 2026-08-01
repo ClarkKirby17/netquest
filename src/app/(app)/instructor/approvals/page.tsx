@@ -16,8 +16,7 @@ export default async function ApprovalsPage() {
       verified: users.emailVerifiedAt,
       course: courses.name,
       section: sections.name,
-      at: users.createdAt,
-    })
+      at: users.createdAt })
     .from(users)
     .innerJoin(studentProfiles, eq(studentProfiles.userId, users.id))
     .innerJoin(courses, eq(courses.id, studentProfiles.courseId))

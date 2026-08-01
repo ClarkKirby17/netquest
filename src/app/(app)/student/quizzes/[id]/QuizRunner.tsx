@@ -9,8 +9,7 @@ import { submitQuiz } from "../actions";
    warning — every score is computed on the server. */
 export default function QuizRunner({
   quizId, title, moduleNumber, moduleTitle, passingScore,
-  attemptNumber, maxAttempts, questions,
-}: {
+  attemptNumber, maxAttempts, questions }: {
   quizId: number;
   title: string;
   moduleNumber: number;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
-import { Card, CardHead, Table, Th, Td, Pill, Led, Empty } from "@/components/ui";
+import { Card, CardHead, Table, Th, Td, Pill, Empty } from "@/components/ui";
 import { createQuiz } from "@/lib/quiz-actions";
 
 export type QuizRow = {
@@ -16,8 +16,7 @@ export type QuizRow = {
 
 export default function QuizList({
   rows,
-  scope,
-}: {
+  scope }: {
   rows: QuizRow[];
   scope: "mine" | "default";
 }) {
@@ -58,7 +57,7 @@ export default function QuizList({
                     <Pill tone="wire">default applies</Pill>
                   )}
                   {!r.quizId && (scope === "default" || (r.defaultQuestionCount ?? 0) === 0) && <Pill>none</Pill>}
-                  {r.quizId && r.published && <Pill tone="signal"><Led state="done" />live</Pill>}
+                  {r.quizId && r.published && <Pill tone="signal">live</Pill>}
                   {r.quizId && !r.published && <Pill tone="warn">draft</Pill>}
                 </Td>
                 <Td className="text-right">
