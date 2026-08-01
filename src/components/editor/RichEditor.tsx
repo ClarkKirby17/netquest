@@ -1,6 +1,8 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useRef, useState } from "react";
+import { uploadImage } from "@/lib/uploads";
 import StarterKit from "@tiptap/starter-kit";
 import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
@@ -13,6 +15,7 @@ import {
   Bold, Italic, Strikethrough, Code, Heading2, Heading3, List, ListOrdered,
   Quote, Minus, Link2, Image as ImageIcon, Table as TableIcon,
   Rows3, Columns3, Trash2, Undo2, Redo2, SquareSplitVertical,
+  Upload, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +32,10 @@ export default function RichEditor({
   initialHtml?: string;
   placeholder?: string;
 }) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -76,6 +83,22 @@ export default function RichEditor({
     if (url) editor.chain().focus().setImage({ src: url }).run();
   };
 
+  /* Upload straight from the toolbar; pasting a URL still works for
+     images already hosted elsewhere. */
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    setUploadError(null);
+    const data = new FormData();
+    data.append("file", file);
+    const res = await uploadImage(data);
+    setUploading(false);
+    if (res.error) {
+      setUploadError(res.error);
+      return;
+    }
+    if (res.url) editor.chain().focus().setImage({ src: res.url }).run();
+  };
+
   const addPageBreak = () => {
     /* The reader splits lesson content on a paragraph containing
        exactly [[page]] — same convention as v1. */
@@ -107,6 +130,12 @@ export default function RichEditor({
         <Btn on={addLink} active={editor.isActive("link")} label="Link"><Link2 size={15} /></Btn>
         <Btn on={addImage} label="Image from URL"><ImageIcon size={15} /></Btn>
         <Btn
+          on={() => fileInput.current?.click()}
+          label={uploading ? "Uploading…" : "Upload an image"}
+        >
+          {uploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+        </Btn>
+        <Btn
           on={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
           active={inTable}
           label="Insert table"
@@ -133,6 +162,24 @@ export default function RichEditor({
           <Btn on={() => editor.chain().focus().redo().run()} label="Redo"><Redo2 size={15} /></Btn>
         </div>
       </div>
+
+      <input
+        ref={fileInput}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
+
+      {uploadError && (
+        <div className="border-b border-[var(--color-line)] bg-[rgba(255,77,109,.08)] px-4 py-2.5 text-sm text-[var(--color-alert)]">
+          {uploadError}
+        </div>
+      )}
 
       <EditorContent editor={editor} />
 

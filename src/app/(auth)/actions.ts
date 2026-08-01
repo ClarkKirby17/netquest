@@ -13,6 +13,7 @@ import { loginSchema, registerSchema, verifySchema } from "@/lib/validations";
 import { sendVerificationCode, sendPasswordResetCode } from "@/lib/mail";
 import { HOME_FOR } from "@/lib/roles";
 import { getSetting } from "@/lib/settings";
+import { checkLimit } from "@/lib/ratelimit";
 
 export type ActionState = {
   error?: string;
@@ -30,6 +31,12 @@ export async function registerAction(
      re-checks so a direct POST can't slip past it. */
   if ((await getSetting("registration_enabled")) === "0") {
     return { error: "Registration is closed right now. Contact your instructor." };
+  }
+
+  const attempted = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (attempted) {
+    const limited = await checkLimit("register", attempted);
+    if (limited) return { error: limited };
   }
 
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
@@ -106,6 +113,9 @@ export async function verifyAction(
   }
   const { email, code } = parsed.data;
 
+  const limited = await checkLimit("verify", email);
+  if (limited) return { error: limited };
+
   const record = await db.query.verificationCodes.findFirst({
     where: and(
       eq(verificationCodes.email, email),
@@ -150,6 +160,9 @@ export async function resendCodeAction(
 ): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   if (!email) return { error: "Missing email." };
+
+  const limited = await checkLimit("resendCode", email);
+  if (limited) return { error: limited };
 
   const user = await db.query.users.findFirst({ where: eq(users.email, email) });
   if (!user || user.emailVerifiedAt) {
@@ -253,6 +266,9 @@ export async function requestPasswordReset(
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return { error: "Enter a valid email address." };
   }
+
+  const limited = await checkLimit("passwordReset", email);
+  if (limited) return { error: limited };
 
   const user = await db.query.users.findFirst({ where: eq(users.email, email) });
 
