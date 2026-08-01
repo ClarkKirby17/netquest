@@ -4,12 +4,16 @@ import {
   BarChart3, GraduationCap, ArrowRight, Mail, MapPin,
 } from "lucide-react";
 import TraceHero from "@/components/landing/TraceHero";
+import TeamGrid from "@/components/landing/TeamGrid";
 
+/* Drop photos into public/team/ using these filenames. Square images
+   look best — around 400x400. Any card without a photo falls back to
+   initials, so the section never looks broken while you gather them. */
 const TEAM = [
-  "Jed Neo Mirabueno",
-  "Jorence Perualila",
-  "Michael John Quinones",
-  "John Michael Dela Cruz",
+  { name: "Jed Neo Mirabueno", photo: "/team/jed.jpg", role: "developer" },
+  { name: "Jorence Perualila", photo: "/team/jorence.jpg", role: "developer" },
+  { name: "Michael John Quinones", photo: "/team/michael.jpg", role: "developer" },
+  { name: "John Michael Dela Cruz", photo: "/team/john.jpg", role: "developer" },
 ];
 
 const FEATURES = [
@@ -261,22 +265,8 @@ export default function LandingPage() {
           Four students who thought networking class deserved better than slides.
         </p>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {TEAM.map((name) => {
-            const initials = name.split(" ").slice(0, 2).map((w) => w[0]).join("");
-            return (
-              <article key={name} className="nq-card nq-card-hover p-6 text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-[var(--color-signal)] bg-[var(--color-signal-soft)] font-[family-name:var(--font-display-src)] text-xl font-bold text-[var(--color-signal)]">
-                  {initials}
-                </div>
-                <h3 className="mt-4 font-semibold">{name}</h3>
-                <p className="mt-1 font-[family-name:var(--font-mono-src)] text-[.7rem] uppercase tracking-[.14em] text-[var(--color-muted)]">
-                  developer
-                </p>
-              </article>
-            );
-          })}
-        </div>
+        <TeamGrid team={TEAM} />
+
       </section>
 
       {/* ─────────────── cta ─────────────── */}
