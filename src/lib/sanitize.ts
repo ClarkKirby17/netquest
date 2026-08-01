@@ -41,11 +41,19 @@ export function sanitizeHtml(input: string): string {
         if (name === "href" || name === "src") {
           const v = value.toLowerCase().replace(/\s/g, "");
           if (v.startsWith("javascript:") || v.startsWith("data:text")) continue;
+          /* An image needs an absolute http(s) URL. Anything else —
+             an empty string, a relative path, a blob: URL that only
+             existed in the author's browser — renders as a broken
+             icon for every student, so drop the attribute and let the
+             tag be discarded below. */
+          if (t === "img" && !/^https?:\/\//.test(v)) continue;
         }
         clean += ` ${name}="${value.replace(/"/g, "&quot;")}"`;
       }
       if (t === "a") clean += ' rel="noopener noreferrer"';
     }
+    /* An <img> with no surviving src is worse than no image. */
+    if (t === "img" && !clean.includes("src=")) return "";
     return `<${t}${clean}${selfClose ? " /" : ""}>`;
   });
 

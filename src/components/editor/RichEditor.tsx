@@ -92,11 +92,15 @@ export default function RichEditor({
     data.append("file", file);
     const res = await uploadImage(data);
     setUploading(false);
-    if (res.error) {
-      setUploadError(res.error);
+
+    /* Only insert when there is a real URL. Inserting on a failed
+       upload was leaving <img> tags with no usable src, which students
+       then saw as broken-image icons. */
+    if (res.error || !res.url) {
+      setUploadError(res.error ?? "Upload failed — no URL was returned.");
       return;
     }
-    if (res.url) editor.chain().focus().setImage({ src: res.url }).run();
+    editor.chain().focus().setImage({ src: res.url }).run();
   };
 
   const addPageBreak = () => {
