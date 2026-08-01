@@ -288,11 +288,11 @@ export default function LandingPage() {
           <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
             <span className="flex items-center gap-2">
               <Mail size={13} className="text-[var(--color-signal)]" />
-              team@netquest.academy
+              netquest@gmail.com
             </span>
             <span className="flex items-center gap-2">
               <MapPin size={13} className="text-[var(--color-signal)]" />
-              Caloocan, Philippines
+              Valenzuela, Philippines
             </span>
           </div>
         </div>
