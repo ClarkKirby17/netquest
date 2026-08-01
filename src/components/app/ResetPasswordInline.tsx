@@ -13,7 +13,8 @@ export default function ResetPasswordInline({
   action,
   idName,
   id,
-  name }: {
+  name,
+}: {
   action: (prev: State, formData: FormData) => Promise<State>;
   idName: string;
   id: number;

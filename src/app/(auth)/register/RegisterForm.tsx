@@ -15,7 +15,8 @@ const initial: ActionState = {};
 export default function RegisterForm({
   courses,
   sections,
-  instructors }: {
+  instructors,
+}: {
   courses: Course[];
   sections: Section[];
   instructors: Instructor[];

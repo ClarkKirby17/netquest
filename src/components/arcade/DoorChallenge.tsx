@@ -31,7 +31,8 @@ export default function DoorChallenge({
   best,
   scoringLeft,
   fetchQuestions,
-  submit }: {
+  submit,
+}: {
   best: number;
   scoringLeft: number;
   fetchQuestions: (d: Difficulty) => Promise<DoorQuestion[]>;

@@ -13,7 +13,8 @@ const SCOPES = [
 ] as const;
 
 export default async function LeaderboardPage({
-  searchParams }: {
+  searchParams,
+}: {
   searchParams: Promise<{ scope?: string }>;
 }) {
   const me = await requireRole("student");

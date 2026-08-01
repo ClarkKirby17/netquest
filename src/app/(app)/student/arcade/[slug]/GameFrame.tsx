@@ -12,7 +12,8 @@ import { loadDoorQuestions, loadCliMission, recordRun } from "../actions";
 export default function GameFrame({
   slug,
   best,
-  scoringLeft }: {
+  scoringLeft,
+}: {
   slug: GameSlug;
   best: number;
   scoringLeft: number;

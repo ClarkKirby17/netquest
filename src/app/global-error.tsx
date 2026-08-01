@@ -4,7 +4,8 @@
    cannot rely on any of the app's styling. */
 export default function GlobalError({
   error,
-  reset }: {
+  reset,
+}: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {

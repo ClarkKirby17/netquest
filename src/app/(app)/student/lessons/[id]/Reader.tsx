@@ -20,7 +20,8 @@ export default function Reader({
   startPage,
   completed,
   nextLessonId,
-  position }: {
+  position,
+}: {
   lessonId: number;
   moduleId: number;
   moduleNumber: number;

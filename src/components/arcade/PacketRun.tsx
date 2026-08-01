@@ -34,7 +34,8 @@ const GROUND = H - 46;
 export default function PacketRun({
   best,
   scoringLeft,
-  submit }: {
+  submit,
+}: {
   best: number;
   scoringLeft: number;
   submit: (d: Difficulty, score: number) => Promise<SubmitResult>;

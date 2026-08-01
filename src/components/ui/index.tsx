@@ -23,7 +23,8 @@ export function Led(_props: {
 export function Card({
   className,
   hover = false,
-  children }: {
+  children,
+}: {
   className?: string;
   hover?: boolean;
   children: React.ReactNode;
@@ -38,7 +39,8 @@ export function Card({
 export function CardHead({
   title,
   sub,
-  action }: {
+  action,
+}: {
   title: string;
   sub?: string;
   action?: React.ReactNode;
@@ -56,7 +58,8 @@ export function CardHead({
 
 /* ------------------------------------------------------- Eyebrow */
 export function Eyebrow({
-  children }: {
+  children,
+}: {
   children: React.ReactNode;
   /* Kept so existing call sites compile; no longer rendered. */
   led?: "live" | "wire" | "done";
@@ -69,7 +72,8 @@ export function PageHead({
   eyebrow,
   title,
   sub,
-  action }: {
+  action,
+}: {
   eyebrow?: string;
   title: string;
   sub?: string;
@@ -166,7 +170,8 @@ export function Button({
 /* --------------------------------------------------------- Pill */
 export function Pill({
   tone = "muted",
-  children }: {
+  children,
+}: {
   tone?: "signal" | "wire" | "warn" | "alert" | "muted";
   children: React.ReactNode;
 }) {
@@ -215,7 +220,8 @@ export function Empty({
   icon: Icon,
   title,
   body,
-  action }: {
+  action,
+}: {
   icon?: LucideIcon;
   title: string;
   body?: string;
@@ -270,7 +276,8 @@ export function Td({ children, className }: { children?: React.ReactNode; classN
 /* ------------------------------------------------------- Skeleton */
 export function Skeleton({
   className,
-  style }: {
+  style,
+}: {
   className?: string;
   style?: React.CSSProperties;
 }) {

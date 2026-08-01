@@ -21,7 +21,8 @@ function toneFor(event: string): "signal" | "warn" | "alert" | "wire" | "muted" 
 }
 
 export default async function AuditPage({
-  searchParams }: {
+  searchParams,
+}: {
   searchParams: Promise<{ q?: string; role?: string; from?: string; to?: string; page?: string }>;
 }) {
   await requireRole("superadmin");

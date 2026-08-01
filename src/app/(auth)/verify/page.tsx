@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import VerifyForm from "./VerifyForm";
 
 export default async function VerifyPage({
-  searchParams }: {
+  searchParams,
+}: {
   searchParams: Promise<{ email?: string; dev?: string }>;
 }) {
   const { email = "", dev } = await searchParams;

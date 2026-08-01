@@ -38,7 +38,8 @@ export default function NetCli({
   scoringLeft,
   descriptions,
   fetchMission,
-  submit }: {
+  submit,
+}: {
   best: number;
   scoringLeft: number;
   descriptions: Record<Difficulty, string>;

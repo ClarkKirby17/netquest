@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 const PER_PAGE = 20;
 
 export default async function UsersPage({
-  searchParams }: {
+  searchParams,
+}: {
   searchParams: Promise<{ q?: string; role?: string; status?: string; page?: string }>;
 }) {
   await requireRole("admin", "superadmin");

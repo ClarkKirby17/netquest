@@ -7,7 +7,8 @@ const initial: ActionState = {};
 
 export default function VerifyForm({
   email,
-  devCode }: {
+  devCode,
+}: {
   email: string;
   devCode?: string;
 }) {

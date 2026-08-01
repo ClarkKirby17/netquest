@@ -4,7 +4,8 @@ import ResetForm from "./ResetForm";
 export const dynamic = "force-dynamic";
 
 export default async function ResetPasswordPage({
-  searchParams }: {
+  searchParams,
+}: {
   searchParams: Promise<{ email?: string; dev?: string }>;
 }) {
   const { email = "", dev } = await searchParams;

@@ -5,7 +5,8 @@ import { requireRole } from "@/lib/guard";
 import QuizEditor from "@/components/quiz/QuizEditor";
 
 export default async function InstructorQuizEditor({
-  params }: {
+  params,
+}: {
   params: Promise<{ moduleId: string }>;
 }) {
   const me = await requireRole("instructor");

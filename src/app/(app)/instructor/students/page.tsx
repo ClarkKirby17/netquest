@@ -4,9 +4,12 @@ import { Users, Search } from "lucide-react";
 import { db, users, studentProfiles, sections, lessons, lessonProgress, modules } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { Card, CardHead, PageHead, Table, Th, Td, Progress, Empty } from "@/components/ui";
+import ResetPasswordInline from "@/components/app/ResetPasswordInline";
+import { resetStudentPassword } from "../actions";
 
 export default async function StudentsPage({
-  searchParams }: {
+  searchParams,
+}: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const me = await requireRole("instructor");

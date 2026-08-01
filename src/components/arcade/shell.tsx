@@ -76,7 +76,8 @@ export function TitleScreen({
   best,
   scoringLeft,
   descriptions,
-  onStart }: {
+  onStart,
+}: {
   name: string;
   tagline: string;
   blurb: string;
@@ -222,7 +223,8 @@ export function Summary({
   difficulty,
   stats,
   result,
-  onReplay }: {
+  onReplay,
+}: {
   score: number;
   difficulty: Difficulty;
   stats: { label: string; value: React.ReactNode }[];
@@ -343,7 +345,8 @@ export function Summary({
 export function Stage({
   children,
   shake,
-  flash }: {
+  flash,
+}: {
   children: React.ReactNode;
   shake?: boolean;
   flash?: "good" | "bad" | null;

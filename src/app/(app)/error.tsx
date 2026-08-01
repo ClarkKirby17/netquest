@@ -6,7 +6,8 @@ import { Card } from "@/components/ui";
 
 export default function AppError({
   error,
-  reset }: {
+  reset,
+}: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {

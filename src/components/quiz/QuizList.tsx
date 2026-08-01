@@ -16,7 +16,8 @@ export type QuizRow = {
 
 export default function QuizList({
   rows,
-  scope }: {
+  scope,
+}: {
   rows: QuizRow[];
   scope: "mine" | "default";
 }) {

@@ -9,7 +9,8 @@ import { Card, PageHead, Pill, Progress } from "@/components/ui";
 
 export default async function QuizResultPage({
   params,
-  searchParams }: {
+  searchParams,
+}: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ attempt?: string }>;
 }) {
