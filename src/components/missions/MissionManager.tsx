@@ -5,6 +5,7 @@ import {
 import { OBJECTIVE_KINDS, INTERFACES, describeObjective } from "@/lib/cli-types";
 import type { CliObjectiveKind, Difficulty } from "@/db/schema";
 import { cn } from "@/lib/utils";
+import MissionImageForm from "./MissionImageForm";
 
 const inputCx =
   "w-full rounded-[10px] border border-[var(--color-line)] bg-[rgba(255,255,255,.03)] px-3.5 py-2.5 text-[.9rem] outline-none transition-colors placeholder:text-[#3d4f6b] focus:border-[var(--color-signal)]";
@@ -17,6 +18,7 @@ export type MissionRow = {
   briefing: string;
   difficulty: Difficulty;
   timeLimitSeconds: number;
+  imagePath: string | null;
   active: boolean;
   objectives: {
     id: number;
@@ -100,6 +102,7 @@ export default function MissionManager({
                     <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                       <Pill tone={tone[m.difficulty]}>{m.difficulty}</Pill>
                       <Pill>{Math.round(m.timeLimitSeconds / 60)} min</Pill>
+                      {m.imagePath && <Pill>image</Pill>}
                       {!m.active && <Pill>hidden</Pill>}
                     </div>
                     <h3 className="font-[family-name:var(--font-display-src)] text-base font-bold">
@@ -153,6 +156,9 @@ export default function MissionManager({
                     ))
                   )}
                 </div>
+
+                {/* guide image (shown above the terminal) */}
+                <MissionImageForm id={m.id} scope={scope} imagePath={m.imagePath} />
 
                 {/* add objective */}
                 <form action={addObjective} className="mt-4 flex flex-wrap items-end gap-2 rounded-[10px] border border-[var(--color-line)] p-3">

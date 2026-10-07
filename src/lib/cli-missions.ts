@@ -47,6 +47,7 @@ export async function missionFor(
     id: mission.id,
     title: mission.title,
     briefing: mission.briefing,
+    imagePath: mission.imagePath,
     timeLimitSeconds: mission.timeLimitSeconds,
     objectives: objectives.map((o) => ({
       id: o.id,

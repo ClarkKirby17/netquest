@@ -455,7 +455,18 @@ export default function NetCli({
           <HudItem label="time" value={`${mm}:${ss}`} tone={timeLeft <= 30 ? "alert" : "text"} />
         </span>
       </Hud>
-
+        {mission.imagePath && (
+        <div className="border-b border-[var(--color-line)] bg-[var(--color-deep)] p-4">
+          <a href={mission.imagePath} target="_blank" rel="noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={mission.imagePath}
+              alt="Mission guide"
+              className="mx-auto max-h-64 rounded-[10px] border border-[var(--color-line)]"
+            />
+          </a>
+        </div>
+      )}
       <div className="grid lg:grid-cols-[1.6fr_1fr]">
         <div
           ref={screenRef}

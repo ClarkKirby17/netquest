@@ -294,6 +294,7 @@ export const cliMissions = pgTable(
     title: varchar("title", { length: 160 }).notNull(),
     briefing: text("briefing").notNull().default(""),
     timeLimitSeconds: integer("time_limit_seconds").notNull().default(300),
+    imagePath: varchar("image_path", { length: 255 }), // file name only
     active: boolean("active").notNull().default(true),
   },
   (t) => ({

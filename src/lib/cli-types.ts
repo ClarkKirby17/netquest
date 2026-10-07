@@ -31,6 +31,7 @@ export type PlayableMission = {
   id: number;
   title: string;
   briefing: string;
+  imagePath: string | null;
   timeLimitSeconds: number;
   objectives: PlayableObjective[];
 };

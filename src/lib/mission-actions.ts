@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { and, eq, isNull, max } from "drizzle-orm";
+import { del } from "@vercel/blob";
 import { db, cliMissions, cliObjectives, auditLogs } from "@/db";
 import { requireRole } from "@/lib/guard";
+import { uploadImage } from "@/lib/uploads"; // <- match your real file name
 import type { CliObjectiveKind, Difficulty } from "@/db/schema";
 
 const pathFor = (scope: "mine" | "global") =>
@@ -16,6 +18,17 @@ async function ownerFor(scope: "mine" | "global") {
       : await requireRole("instructor");
   return { me, ownerId: scope === "global" ? null : me.userId };
 }
+
+const ownedBy = (id: number, ownerId: number | null) =>
+  and(
+    eq(cliMissions.id, id),
+    ownerId === null ? isNull(cliMissions.instructorId) : eq(cliMissions.instructorId, ownerId)
+  );
+
+/* Delete a Blob file; ignores anything that isn't one of ours. */
+const dropBlob = async (url: string | null) => {
+  if (url?.includes(".public.blob.vercel-storage.com")) await del(url).catch(() => {});
+};
 
 export async function createMission(formData: FormData) {
   const scope = (formData.get("scope") as "mine" | "global") ?? "mine";
@@ -43,12 +56,11 @@ export async function deleteMission(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!id) return;
 
-  await db.delete(cliMissions).where(
-    and(
-      eq(cliMissions.id, id),
-      ownerId === null ? isNull(cliMissions.instructorId) : eq(cliMissions.instructorId, ownerId)
-    )
-  );
+  const mission = await db.query.cliMissions.findFirst({ where: ownedBy(id, ownerId) });
+  if (!mission) return;
+
+  await db.delete(cliMissions).where(eq(cliMissions.id, mission.id)); // objectives cascade
+  await dropBlob(mission.imagePath);
   revalidatePath(pathFor(scope));
 }
 
@@ -59,12 +71,7 @@ export async function toggleMission(formData: FormData) {
   const active = formData.get("active") === "1";
   if (!id) return;
 
-  await db.update(cliMissions).set({ active }).where(
-    and(
-      eq(cliMissions.id, id),
-      ownerId === null ? isNull(cliMissions.instructorId) : eq(cliMissions.instructorId, ownerId)
-    )
-  );
+  await db.update(cliMissions).set({ active }).where(ownedBy(id, ownerId));
   revalidatePath(pathFor(scope));
 }
 
@@ -76,12 +83,7 @@ export async function addObjective(formData: FormData) {
   if (!missionId || !kind) return;
 
   /* Only add to a mission you own. */
-  const mission = await db.query.cliMissions.findFirst({
-    where: and(
-      eq(cliMissions.id, missionId),
-      ownerId === null ? isNull(cliMissions.instructorId) : eq(cliMissions.instructorId, ownerId)
-    ),
-  });
+  const mission = await db.query.cliMissions.findFirst({ where: ownedBy(missionId, ownerId) });
   if (!mission) return;
 
   const iface = String(formData.get("iface") ?? "").trim() || null;
@@ -101,9 +103,56 @@ export async function addObjective(formData: FormData) {
 
 export async function deleteObjective(formData: FormData) {
   const scope = (formData.get("scope") as "mine" | "global") ?? "mine";
-  await ownerFor(scope);
+  const { ownerId } = await ownerFor(scope);
   const id = Number(formData.get("id"));
   if (!id) return;
-  await db.delete(cliObjectives).where(eq(cliObjectives.id, id));
+
+  /* Only delete objectives that belong to a mission you own. */
+  const [row] = await db
+    .select({ id: cliObjectives.id })
+    .from(cliObjectives)
+    .innerJoin(cliMissions, eq(cliMissions.id, cliObjectives.missionId))
+    .where(
+      and(
+        eq(cliObjectives.id, id),
+        ownerId === null ? isNull(cliMissions.instructorId) : eq(cliMissions.instructorId, ownerId)
+      )
+    );
+  if (!row) return;
+
+  await db.delete(cliObjectives).where(eq(cliObjectives.id, row.id));
+  revalidatePath(pathFor(scope));
+}
+
+/* ───────────── guide image ───────────── */
+
+export async function setMissionImage(formData: FormData) {
+  const scope = (formData.get("scope") as "mine" | "global") ?? "mine";
+  const { ownerId } = await ownerFor(scope);
+
+  const mission = await db.query.cliMissions.findFirst({
+    where: ownedBy(Number(formData.get("id")), ownerId),
+  });
+  if (!mission) return;
+
+  const up = await uploadImage(formData); // reads "file" and "folder"
+  if (!up.url) return;
+
+  await db.update(cliMissions).set({ imagePath: up.url }).where(eq(cliMissions.id, mission.id));
+  await dropBlob(mission.imagePath); // remove the old image
+  revalidatePath(pathFor(scope));
+}
+
+export async function removeMissionImage(formData: FormData) {
+  const scope = (formData.get("scope") as "mine" | "global") ?? "mine";
+  const { ownerId } = await ownerFor(scope);
+
+  const mission = await db.query.cliMissions.findFirst({
+    where: ownedBy(Number(formData.get("id")), ownerId),
+  });
+  if (!mission) return;
+
+  await db.update(cliMissions).set({ imagePath: null }).where(eq(cliMissions.id, mission.id));
+  await dropBlob(mission.imagePath);
   revalidatePath(pathFor(scope));
 }
