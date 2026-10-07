@@ -74,13 +74,26 @@ export async function registerAction(
     })
     .returning({ id: users.id });
 
-  if (data.role === "student") {
-    await db.insert(studentProfiles).values({
-      userId: user.id,
-      courseId: data.courseId,
-      sectionId: data.sectionId,
-      instructorId: data.instructorId!,
-    });
+if (data.role === "student") {
+  const instructor = await db.query.instructorProfiles.findFirst({
+    where: eq(instructorProfiles.sectionId, data.sectionId),
+  });
+
+  if (!instructor) {
+    return {
+      fieldErrors: {
+        sectionId: "This section does not have an instructor assigned yet.",
+      },
+    };
+  }
+
+  await db.insert(studentProfiles).values({
+    userId: user.id,
+    courseId: data.courseId,
+    sectionId: data.sectionId,
+    instructorId: instructor.userId,
+  });
+  
     await db.insert(gamification).values({ userId: user.id }).onConflictDoNothing();
   } else {
     await db.insert(instructorProfiles).values({

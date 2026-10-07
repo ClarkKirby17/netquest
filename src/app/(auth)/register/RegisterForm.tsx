@@ -8,33 +8,24 @@ import { registerAction, type ActionState } from "../actions";
 
 type Course = { id: number; name: string };
 type Section = { id: number; name: string; courseId: number };
-type Instructor = { id: number; name: string; sectionId: number };
 
 const initial: ActionState = {};
 
 export default function RegisterForm({
   courses,
   sections,
-  instructors,
 }: {
   courses: Course[];
   sections: Section[];
-  instructors: Instructor[];
 }) {
   const [state, action, pending] = useActionState(registerAction, initial);
   const [role, setRole] = useState<"student" | "instructor">("student");
   const [courseId, setCourseId] = useState<number | "">("");
   const [sectionId, setSectionId] = useState<number | "">("");
 
-  /* The cascade: sections filter by course, instructors by section.
-     The server re-validates the same rule on submit. */
   const sectionOptions = useMemo(
     () => (courseId === "" ? [] : sections.filter((s) => s.courseId === courseId)),
     [courseId, sections]
-  );
-  const instructorOptions = useMemo(
-    () => (sectionId === "" ? [] : instructors.filter((i) => i.sectionId === sectionId)),
-    [sectionId, instructors]
   );
 
   const err = (k: string) => state.fieldErrors?.[k];
@@ -100,26 +91,6 @@ export default function RegisterForm({
           disabled={courseId === ""}
           error={err("sectionId")}
         />
-
-        {role === "student" && (
-          <Select
-            label="Instructor"
-            name="instructorId"
-            value=""
-            onChange={() => {}}
-            uncontrolled
-            options={instructorOptions.map((i) => ({ value: i.id, label: i.name }))}
-            placeholder={
-              sectionId === ""
-                ? "Pick a section first"
-                : instructorOptions.length === 0
-                  ? "No instructor for this section yet"
-                  : "Choose your instructor"
-            }
-            disabled={sectionId === "" || instructorOptions.length === 0}
-            error={err("instructorId")}
-          />
-        )}
 
         {state.error && (
           <p className="rounded-[10px] border border-[rgba(255,77,109,.3)] bg-[rgba(255,77,109,.08)] px-4 py-3 text-sm text-[var(--color-alert)]">
