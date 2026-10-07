@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { setMissionImage, removeMissionImage } from "@/lib/mission-actions";
 
 const MAX = 4 * 1024 * 1024;
@@ -11,6 +11,12 @@ export default function MissionImageForm({
 }: { id: number; scope: "mine" | "global"; imagePath: string | null }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [state, formAction, pending] = useActionState(setMissionImage, {});
+
+  /* After a successful save, show the saved image instead of the local preview. */
+  useEffect(() => {
+    if (state.ok) setPreview(null);
+  }, [state]);
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -34,17 +40,19 @@ export default function MissionImageForm({
         <img src={shown} alt="Mission guide" className="mb-3 max-h-40 rounded-[10px] border border-[var(--color-line)]" />
       )}
 
-      <form action={setMissionImage} className="flex flex-wrap items-center gap-2">
+      <form action={formAction} className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="scope" value={scope} />
         <input type="hidden" name="folder" value="missions" />
         <input type="file" name="file" required onChange={onFile}
           accept={TYPES.join(",")} className="text-xs text-[var(--color-muted)]" />
-        <button className="btn btn-ghost disabled:opacity-40" disabled={!!error}>
-          {imagePath ? "Replace image" : "Upload image"}
+        <button className="btn btn-ghost disabled:opacity-40" disabled={!!error || pending}>
+          {pending ? "Uploading…" : imagePath ? "Replace image" : "Upload image"}
         </button>
       </form>
       {error && <p className="mt-1.5 text-xs text-[var(--color-alert)]">{error}</p>}
+      {state.error && <p className="mt-1.5 text-xs text-[var(--color-alert)]">{state.error}</p>}
+      {state.ok && <p className="mt-1.5 text-xs text-[var(--color-signal)]">Image saved.</p>}
 
       {imagePath && (
         <form action={removeMissionImage} className="mt-2">

@@ -126,35 +126,25 @@ export async function deleteObjective(formData: FormData) {
 
 /* ───────────── guide image ───────────── */
 
-export async function setMissionImage(formData: FormData) {
-  const file = formData.get("file") as File | null;
-  console.log("setMissionImage called", {
-    id: formData.get("id"),
-    scope: formData.get("scope"),
-    fileName: file?.name,
-    fileSize: file?.size,
-  });
-
+export async function setMissionImage(
+  _prev: { error?: string; ok?: boolean },
+  formData: FormData
+): Promise<{ error?: string; ok?: boolean }> {
   const scope = (formData.get("scope") as "mine" | "global") ?? "mine";
   const { ownerId } = await ownerFor(scope);
 
   const mission = await db.query.cliMissions.findFirst({
     where: ownedBy(Number(formData.get("id")), ownerId),
   });
-  if (!mission) {
-    console.error("setMissionImage: mission not found or not owned", { ownerId });
-    return;
-  }
+  if (!mission) return { error: "Mission not found, or it isn't yours." };
 
-  const up = await uploadImage(formData); // reads "file" and "folder"
-  if (!up.url) {
-    console.error("Mission image upload:", up.error);
-    return;
-  }
+  const up = await uploadImage(formData);
+  if (!up.url) return { error: up.error ?? "Upload failed." };
 
   await db.update(cliMissions).set({ imagePath: up.url }).where(eq(cliMissions.id, mission.id));
-  await dropBlob(mission.imagePath); // remove the old image
+  await dropBlob(mission.imagePath);
   revalidatePath(pathFor(scope));
+  return { ok: true };
 }
 
 export async function removeMissionImage(formData: FormData) {
