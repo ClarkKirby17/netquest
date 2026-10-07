@@ -31,7 +31,7 @@ export const NAV: Record<Role, NavItem[]> = {
     { label: "Dashboard", href: "/student", icon: LayoutDashboard },
     { label: "Modules", href: "/student/modules", icon: BookOpen },
     { label: "Quizzes", href: "/student/quizzes", icon: GraduationCap },
-    { label: "Arcade", href: "/student/arcade", icon: Gamepad2 },
+    { label: "Assessment Task", href: "/student/arcade", icon: Gamepad2 },
     { label: "Leaderboard", href: "/student/leaderboard", icon: Trophy },
     { label: "Achievements", href: "/student/achievements", icon: Award },
     { label: "Profile", href: "/student/profile", icon: User },
