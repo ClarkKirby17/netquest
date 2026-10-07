@@ -73,7 +73,7 @@ export const studentProfiles = pgTable(
 export const instructorProfiles = pgTable("instructor_profiles", {
   userId: integer("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
   courseId: integer("course_id").references(() => courses.id),
-  sectionId: integer("section_id").references(() => sections.id),
+  sectionId: integer("section_id").notNull().unique(),
 });
 
 /* ─────────────────────────── learning ─────────────────────────── */

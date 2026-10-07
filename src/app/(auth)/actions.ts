@@ -27,8 +27,6 @@ export async function registerAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  /* The page redirects when registration is closed; the action
-     re-checks so a direct POST can't slip past it. */
   if ((await getSetting("registration_enabled")) === "0") {
     return { error: "Registration is closed right now. Contact your instructor." };
   }
@@ -49,71 +47,88 @@ export async function registerAction(
   }
   const data = parsed.data;
 
-  // One email across every role — the win of the single users table.
   const existing = await db.query.users.findFirst({ where: eq(users.email, data.email) });
   if (existing) {
     return { fieldErrors: { email: "That email is already registered." } };
   }
 
-  // The section must belong to the chosen course (the v1 bug, enforced server-side).
   const section = await db.query.sections.findFirst({ where: eq(sections.id, data.sectionId) });
   if (!section || section.courseId !== data.courseId) {
     return { fieldErrors: { sectionId: "That section belongs to a different course." } };
   }
 
-  const passwordHash = await bcrypt.hash(data.password, 12);
-
-  const [user] = await db
-    .insert(users)
-    .values({
-      email: data.email,
-      passwordHash,
-      fullName: data.fullName,
-      role: data.role,
-      status: "pending",
-    })
-    .returning({ id: users.id });
-
-if (data.role === "student") {
-  const instructor = await db.query.instructorProfiles.findFirst({
+  // Role-specific checks BEFORE creating anything
+  const sectionInstructor = await db.query.instructorProfiles.findFirst({
     where: eq(instructorProfiles.sectionId, data.sectionId),
   });
 
-  if (!instructor) {
+  if (data.role === "instructor" && sectionInstructor) {
+    return { fieldErrors: { sectionId: "This section already has an instructor." } };
+  }
+  if (data.role === "student" && !sectionInstructor) {
     return {
-      fieldErrors: {
-        sectionId: "This section does not have an instructor assigned yet.",
-      },
+      fieldErrors: { sectionId: "This section does not have an instructor assigned yet." },
     };
   }
 
-  await db.insert(studentProfiles).values({
-    userId: user.id,
-    courseId: data.courseId,
-    sectionId: data.sectionId,
-    instructorId: instructor.userId,
-  });
-  
-    await db.insert(gamification).values({ userId: user.id }).onConflictDoNothing();
-  } else {
-    await db.insert(instructorProfiles).values({
-      userId: user.id,
-      courseId: data.courseId,
-      sectionId: data.sectionId,
+  const passwordHash = await bcrypt.hash(data.password, 12);
+
+  try {
+    await db.transaction(async (tx) => {
+      const [user] = await tx
+        .insert(users)
+        .values({
+          email: data.email,
+          passwordHash,
+          fullName: data.fullName,
+          role: data.role,
+          status: "pending",
+        })
+        .returning({ id: users.id });
+
+      if (data.role === "student") {
+        await tx.insert(studentProfiles).values({
+          userId: user.id,
+          courseId: data.courseId,
+          sectionId: data.sectionId,
+          instructorId: sectionInstructor!.userId,
+        });
+        await tx.insert(gamification).values({ userId: user.id }).onConflictDoNothing();
+      } else {
+        await tx.insert(instructorProfiles).values({
+          userId: user.id,
+          courseId: data.courseId,
+          sectionId: data.sectionId,
+        });
+      }
+
+      await tx.insert(auditLogs).values({
+        event: "user.registered",
+        userId: user.id,
+        userRole: data.role,
+        details: data.email,
+      });
     });
+  } catch (e) {
+    // Two instructors racing for the same section: the DB constraint wins.
+    if (isUniqueViolation(e)) {
+      return data.role === "instructor"
+        ? { fieldErrors: { sectionId: "This section already has an instructor." } }
+        : { fieldErrors: { email: "That email is already registered." } };
+    }
+    throw e;
   }
 
-  await db.insert(auditLogs).values({
-    event: "user.registered",
-    userId: user.id,
-    userRole: data.role,
-    details: data.email,
-  });
-
+  // redirect() must stay OUTSIDE the try/catch, because it works by throwing.
   const devCode = await issueCode(data.email);
   redirect(`/verify?email=${encodeURIComponent(data.email)}${devCode ? `&dev=${devCode}` : ""}`);
 }
 
+function isUniqueViolation(e: unknown): boolean {
+  const err = e as { code?: string; cause?: { code?: string } };
+  const code = err?.code ?? err?.cause?.code;
+  return code === "23505" || code === "SQLITE_CONSTRAINT_UNIQUE"; // Postgres / SQLite
+}
 /* ─────────────────────────────── verify ─────────────────────────────── */
 
 export async function verifyAction(

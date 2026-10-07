@@ -14,19 +14,30 @@ const initial: ActionState = {};
 export default function RegisterForm({
   courses,
   sections,
+  instructorSectionIds,
 }: {
   courses: Course[];
   sections: Section[];
+  instructorSectionIds: number[];
 }) {
   const [state, action, pending] = useActionState(registerAction, initial);
   const [role, setRole] = useState<"student" | "instructor">("student");
   const [courseId, setCourseId] = useState<number | "">("");
   const [sectionId, setSectionId] = useState<number | "">("");
 
-  const sectionOptions = useMemo(
-    () => (courseId === "" ? [] : sections.filter((s) => s.courseId === courseId)),
-    [courseId, sections]
-  );
+const sectionOptions = useMemo(() => {
+  if (courseId === "") return [];
+  const taken = new Set(instructorSectionIds);
+
+  return sections
+    .filter((s) => s.courseId === courseId)
+    .map((s) => {
+      const hasInstructor = taken.has(s.id);
+      return role === "instructor"
+        ? { value: s.id, label: hasInstructor ? `${s.name} (taken)` : s.name, disabled: hasInstructor }
+        : { value: s.id, label: hasInstructor ? s.name : `${s.name} (no instructor yet)`, disabled: !hasInstructor };
+    });
+}, [courseId, sections, role, instructorSectionIds]);
 
   const err = (k: string) => state.fieldErrors?.[k];
 
@@ -50,7 +61,7 @@ export default function RegisterForm({
           <button
             key={value}
             type="button"
-            onClick={() => setRole(value)}
+            onClick={() => { setRole(value); setSectionId(""); }}
             className={cn(
               "flex flex-col items-center gap-2 rounded-[10px] border px-4 py-4 transition-all duration-150",
               role === value
@@ -86,7 +97,7 @@ export default function RegisterForm({
           name="sectionId"
           value={sectionId}
           onChange={setSectionId}
-          options={sectionOptions.map((s) => ({ value: s.id, label: s.name }))}
+          options={sectionOptions}
           placeholder={courseId === "" ? "Pick a course first" : "Choose your section"}
           disabled={courseId === ""}
           error={err("sectionId")}
@@ -148,7 +159,7 @@ function Select({
   name: string;
   value: number | "";
   onChange: (v: number | "") => void;
-  options: { value: number; label: string }[];
+  options: { value: number; label: string; disabled?: boolean }[];
   placeholder: string;
   disabled?: boolean;
   error?: string;
@@ -167,9 +178,9 @@ function Select({
         required
       >
         <option value="">{placeholder}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
+{options.map((o) => (
+  <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>
+))}
       </select>
       <ErrorLine msg={error} />
     </div>
