@@ -112,11 +112,14 @@ export async function registerAction(
   } catch (e) {
     const constraint = uniqueViolationOf(e);
     if (constraint !== null) {
-      if (constraint.includes("section_id")) {
+      if (constraint.includes("users_email")) {
+        return { fieldErrors: { email: "That email is already registered." } };
+      }
+      if (constraint.includes("instructor_profiles")) {
         return { fieldErrors: { sectionId: "This section already has an instructor." } };
       }
-      return { fieldErrors: { email: "That email is already registered." } };
     }
+    console.error("register failed:", e);
     throw e;
   }
 
@@ -126,10 +129,16 @@ export async function registerAction(
 }
 
 function uniqueViolationOf(e: unknown): string | null {
-  const err = e as { code?: string; constraint?: string; cause?: { code?: string; constraint?: string } };
+  const err = e as any;
   const code = err?.code ?? err?.cause?.code;
   if (code !== "23505") return null;
-  return err?.constraint ?? err?.cause?.constraint ?? "";
+  return (
+    err?.constraint ??
+    err?.constraint_name ??
+    err?.cause?.constraint ??
+    err?.cause?.constraint_name ??
+    ""
+  );
 }
 /* ─────────────────────────────── verify ─────────────────────────────── */
 

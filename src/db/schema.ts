@@ -59,7 +59,7 @@ export const studentProfiles = pgTable(
   {
     userId: integer("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
     courseId: integer("course_id").notNull().references(() => courses.id),
-    sectionId: integer("section_id").notNull().unique().references(() => sections.id),
+    sectionId: integer("section_id").notNull().references(() => sections.id), // .unique() removed
     instructorId: integer("instructor_id").references(() => users.id, { onDelete: "set null" }),
     totalPoints: integer("total_points").notNull().default(0),
     badgeCount: integer("badge_count").notNull().default(0),
@@ -67,13 +67,14 @@ export const studentProfiles = pgTable(
   (t) => ({
     instructorIdx: index("sp_instructor_idx").on(t.instructorId),
     pointsIdx: index("sp_points_idx").on(t.totalPoints),
+    sectionIdx: index("sp_section_idx").on(t.sectionId),
   })
 );
 
 export const instructorProfiles = pgTable("instructor_profiles", {
   userId: integer("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
   courseId: integer("course_id").references(() => courses.id),
-  sectionId: integer("section_id").notNull().unique(),
+  sectionId: integer("section_id").notNull().unique().references(() => sections.id), // FK added
 });
 
 /* ─────────────────────────── learning ─────────────────────────── */
