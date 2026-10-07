@@ -124,6 +124,7 @@ export async function deleteObjective(formData: FormData) {
   revalidatePath(pathFor(scope));
 }
 
+
 /* ───────────── guide image ───────────── */
 
 export async function setMissionImage(formData: FormData) {
@@ -136,7 +137,10 @@ export async function setMissionImage(formData: FormData) {
   if (!mission) return;
 
   const up = await uploadImage(formData); // reads "file" and "folder"
-  if (!up.url) return;
+  if (!up.url) {
+    console.error("Mission image upload:", up.error);
+    return;
+  }
 
   await db.update(cliMissions).set({ imagePath: up.url }).where(eq(cliMissions.id, mission.id));
   await dropBlob(mission.imagePath); // remove the old image
