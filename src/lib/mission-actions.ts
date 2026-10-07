@@ -5,7 +5,7 @@ import { and, eq, isNull, max } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { db, cliMissions, cliObjectives, auditLogs } from "@/db";
 import { requireRole } from "@/lib/guard";
-import { uploadImage } from "@/lib/uploads"; // <- match your real file name
+import { uploadImage } from "@/lib/uploads"; // must match your upload file's real path
 import type { CliObjectiveKind, Difficulty } from "@/db/schema";
 
 const pathFor = (scope: "mine" | "global") =>
@@ -124,17 +124,27 @@ export async function deleteObjective(formData: FormData) {
   revalidatePath(pathFor(scope));
 }
 
-
 /* ───────────── guide image ───────────── */
 
 export async function setMissionImage(formData: FormData) {
+  const file = formData.get("file") as File | null;
+  console.log("setMissionImage called", {
+    id: formData.get("id"),
+    scope: formData.get("scope"),
+    fileName: file?.name,
+    fileSize: file?.size,
+  });
+
   const scope = (formData.get("scope") as "mine" | "global") ?? "mine";
   const { ownerId } = await ownerFor(scope);
 
   const mission = await db.query.cliMissions.findFirst({
     where: ownedBy(Number(formData.get("id")), ownerId),
   });
-  if (!mission) return;
+  if (!mission) {
+    console.error("setMissionImage: mission not found or not owned", { ownerId });
+    return;
+  }
 
   const up = await uploadImage(formData); // reads "file" and "folder"
   if (!up.url) {
