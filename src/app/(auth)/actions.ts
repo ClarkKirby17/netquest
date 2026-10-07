@@ -110,11 +110,12 @@ export async function registerAction(
       });
     });
   } catch (e) {
-    // Two instructors racing for the same section: the DB constraint wins.
-    if (isUniqueViolation(e)) {
-      return data.role === "instructor"
-        ? { fieldErrors: { sectionId: "This section already has an instructor." } }
-        : { fieldErrors: { email: "That email is already registered." } };
+    const constraint = uniqueViolationOf(e);
+    if (constraint !== null) {
+      if (constraint.includes("section_id")) {
+        return { fieldErrors: { sectionId: "This section already has an instructor." } };
+      }
+      return { fieldErrors: { email: "That email is already registered." } };
     }
     throw e;
   }
@@ -124,10 +125,11 @@ export async function registerAction(
   redirect(`/verify?email=${encodeURIComponent(data.email)}${devCode ? `&dev=${devCode}` : ""}`);
 }
 
-function isUniqueViolation(e: unknown): boolean {
-  const err = e as { code?: string; cause?: { code?: string } };
+function uniqueViolationOf(e: unknown): string | null {
+  const err = e as { code?: string; constraint?: string; cause?: { code?: string; constraint?: string } };
   const code = err?.code ?? err?.cause?.code;
-  return code === "23505" || code === "SQLITE_CONSTRAINT_UNIQUE"; // Postgres / SQLite
+  if (code !== "23505") return null;
+  return err?.constraint ?? err?.cause?.constraint ?? "";
 }
 /* ─────────────────────────────── verify ─────────────────────────────── */
 

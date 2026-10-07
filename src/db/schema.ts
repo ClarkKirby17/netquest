@@ -59,7 +59,7 @@ export const studentProfiles = pgTable(
   {
     userId: integer("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
     courseId: integer("course_id").notNull().references(() => courses.id),
-    sectionId: integer("section_id").notNull().references(() => sections.id),
+    sectionId: integer("section_id").notNull().unique().references(() => sections.id),
     instructorId: integer("instructor_id").references(() => users.id, { onDelete: "set null" }),
     totalPoints: integer("total_points").notNull().default(0),
     badgeCount: integer("badge_count").notNull().default(0),
