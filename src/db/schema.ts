@@ -283,6 +283,18 @@ export const cliObjectiveKindEnum = pgEnum("cli_objective_kind", [
   "vty_login",
   "banner",
   "saved",
+  "dhcp_pool",       // value = pool name
+  "static_route",    // value = "network mask", value2 = next hop
+  "sub_interface",   // iface = e.g. GigabitEthernet0/0.10
+  "port_speed",      // iface + value (10 / 100 / 1000 / auto)
+  "ip_routing",
+  "nat_overload",
+  "trunk_port",      // iface
+  "access_port",     // iface
+  "vlan_assign",     // iface + value (vlan id)
+  "vlan_create",     // value = vlan id
+  "verify_port",
+  "router_trunk",    // sub-interface + value (dot1q vlan id)
 ]);
 
 export const cliMissions = pgTable(

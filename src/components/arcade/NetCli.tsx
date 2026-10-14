@@ -7,8 +7,8 @@ import {
   TitleScreen, Countdown, Hud, HudItem, Summary,
   useArcadeSound, type SubmitResult } from "./shell";
 import {
-  isObjectiveMet, INTERFACES as IFACES,
-  type DeviceState as State, type PlayableMission } from "@/lib/cli-types";
+  isObjectiveMet, INTERFACES as IFACES, blankIface, resolveInterface, shortIf,
+  type DeviceState as State, type IfaceState, type PlayableMission } from "@/lib/cli-types";
 import { cn } from "@/lib/utils";
 
 /* Net CLI — a simulated device console.
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
    commands typed, so any valid path to the right configuration counts. */
 
 type Phase = "title" | "count" | "play" | "over";
-type Mode = "user" | "priv" | "conf" | "conf-if" | "conf-line";
+type Mode = "user" | "priv" | "conf" | "conf-if" | "conf-line" | "conf-dhcp" | "conf-vlan";
 
 const freshState = (): State => ({
   hostname: "Router",
@@ -26,9 +26,14 @@ const freshState = (): State => ({
   banner: null,
   vtyPassword: null,
   vtyLogin: false,
-  interfaces: Object.fromEntries(
-    IFACES.map((n) => [n, { ip: null, mask: null, up: false, desc: null }])
-  ) });
+  ipRouting: false,
+  natOverload: false,
+  dhcpPools: {},
+  routes: [],
+  vlans: [],
+  verified: false,
+  interfaces: Object.fromEntries(IFACES.map((n) => [n, blankIface()])),
+});
 
 const ipOk = (s: string) =>
   /^\d{1,3}(\.\d{1,3}){3}$/.test(s) && s.split(".").every((o) => Number(o) <= 255);
@@ -53,6 +58,7 @@ export default function NetCli({
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<Mode>("user");
   const [curIf, setCurIf] = useState<string | null>(null);
+  const [curPool, setCurPool] = useState<string | null>(null);
   const [state, setState] = useState<State>(freshState);
   const [timeLeft, setTimeLeft] = useState(0);
   const [commands, setCommands] = useState(0);
@@ -124,23 +130,16 @@ export default function NetCli({
     const h = state.hostname;
     return {
       user: `${h}>`, priv: `${h}#`, conf: `${h}(config)#`,
-      "conf-if": `${h}(config-if)#`, "conf-line": `${h}(config-line)#` }[mode];
+      "conf-if": `${h}(config-if)#`, "conf-line": `${h}(config-line)#`,
+      "conf-dhcp": `${h}(dhcp-config)#`, "conf-vlan": `${h}(config-vlan)#`,
+    }[mode];
   }
 
   function abbrev(word: string, candidates: string[]) {
     const w = word.toLowerCase();
+    if (!w) return null;
     const hits = candidates.filter((c) => c.startsWith(w));
     return hits.length === 1 ? hits[0] : candidates.includes(w) ? w : null;
-  }
-
-  function matchIf(token: string) {
-    const t = token.toLowerCase().replace(/\s+/g, "");
-    for (const name of IFACES) {
-      const num = name.replace(/[a-zA-Z]+/, "");
-      if (name.toLowerCase() === t) return name;
-      if (["g" + num, "gi" + num, "gig" + num, "gigabitethernet" + num].includes(t)) return name;
-    }
-    return null;
   }
 
   function invalid(cmd: string, at = 0) {
@@ -161,6 +160,7 @@ export default function NetCli({
 
     const parts = cmd.split(/\s+/);
     const w0 = parts[0];
+    const at = w0.length + 1;
 
     /* ── user EXEC ── */
     if (mode === "user") {
@@ -175,14 +175,14 @@ export default function NetCli({
     if (mode === "priv") {
       const c = abbrev(w0, ["configure", "show", "ping", "write", "copy", "disable", "exit"]);
       if (c === "configure") {
-        if (parts[1] && abbrev(parts[1], ["terminal"]) === "terminal") {
+        if (abbrev(parts[1] ?? "", ["terminal"]) === "terminal") {
           setMode("conf");
           setState((s) => ({ ...s, reachedConf: true }));
           say("Enter configuration commands, one per line. End with CNTL/Z.", "dim");
           sound.click();
           return;
         }
-        return invalid(cmd, w0.length + 1);
+        return invalid(cmd, at);
       }
       if (c === "show") return show(parts);
       if (c === "ping") return ping(parts[1]);
@@ -199,22 +199,100 @@ export default function NetCli({
 
     /* ── global config ── */
     if (mode === "conf") {
-      const c = abbrev(w0, ["hostname", "interface", "line", "banner", "exit", "end"]);
+      const c = abbrev(w0, ["hostname", "interface", "ip", "vlan", "access-list", "line", "banner", "exit", "end"]);
+
       if (c === "hostname") {
         if (!parts[1]) return invalid(cmd);
         setState((s) => ({ ...s, hostname: parts[1] }));
         sound.click();
         return;
       }
+
       if (c === "interface") {
-        const name = matchIf(parts.slice(1).join(""));
-        if (!name) return invalid(cmd, w0.length + 1);
+        const name = resolveInterface(parts.slice(1).join(""));
+        if (!name) return invalid(cmd, at);
+        /* Sub-interfaces are created the first time they're entered. */
+        setState((s) =>
+          s.interfaces[name] ? s : { ...s, interfaces: { ...s.interfaces, [name]: blankIface() } }
+        );
         setCurIf(name); setMode("conf-if");
         return;
       }
+
+      if (c === "ip") {
+        const sub = abbrev(parts[1] ?? "", ["routing", "route", "dhcp", "nat"]);
+
+        if (sub === "routing") {
+          setState((s) => ({ ...s, ipRouting: true }));
+          sound.good();
+          return;
+        }
+
+        if (sub === "route") {
+          const [, , dest, mask, via] = parts;
+          if (ipOk(dest ?? "") && ipOk(mask ?? "") && ipOk(via ?? "")) {
+            setState((s) => ({
+              ...s,
+              routes: [...s.routes.filter((r) => !(r.dest === dest && r.mask === mask)), { dest, mask, via }],
+            }));
+            sound.click();
+            return;
+          }
+          return invalid(cmd, at);
+        }
+
+        if (sub === "dhcp") {
+          const d = abbrev(parts[2] ?? "", ["pool", "excluded-address"]);
+          if (d === "pool" && parts[3]) {
+            const name = parts[3];
+            setState((s) =>
+              s.dhcpPools[name] ? s : { ...s, dhcpPools: { ...s.dhcpPools, [name]: { network: null } } }
+            );
+            setCurPool(name); setMode("conf-dhcp");
+            sound.click();
+            return;
+          }
+          if (d === "excluded-address" && ipOk(parts[3] ?? "") && (!parts[4] || ipOk(parts[4]))) {
+            sound.click();
+            return;
+          }
+          return invalid(cmd, at);
+        }
+
+        if (sub === "nat") {
+          if (
+            abbrev(parts[2] ?? "", ["inside"]) === "inside" &&
+            abbrev(parts[3] ?? "", ["source"]) === "source" &&
+            parts[parts.length - 1].toLowerCase() === "overload"
+          ) {
+            setState((s) => ({ ...s, natOverload: true }));
+            sound.good();
+            return;
+          }
+          return invalid(cmd, at);
+        }
+
+        return invalid(cmd, at);
+      }
+
+      if (c === "vlan") {
+        const n = Number(parts[1]);
+        if (/^\d+$/.test(parts[1] ?? "") && n >= 1 && n <= 4094) {
+          const id = String(n);
+          setState((s) => (s.vlans.includes(id) ? s : { ...s, vlans: [...s.vlans, id] }));
+          setMode("conf-vlan");
+          sound.click();
+          return;
+        }
+        return invalid(cmd, at);
+      }
+
+      /* Accepted so NAT setups feel real; not graded. */
+      if (c === "access-list") { sound.click(); return; }
+
       if (c === "line") {
-        const sub = parts[1] ? abbrev(parts[1], ["vty", "console"]) : null;
-        if (!sub) return invalid(cmd, w0.length + 1);
+        const sub = abbrev(parts[1] ?? "", ["vty", "console"]);
+        if (!sub) return invalid(cmd, at);
         setMode("conf-line");
         return;
       }
@@ -231,46 +309,131 @@ export default function NetCli({
 
     /* ── interface config ── */
     if (mode === "conf-if" && curIf) {
-      const c = abbrev(w0, ["ip", "no", "shutdown", "description", "exit", "end"]);
+      const name = curIf;
+      const setIf = (patch: Partial<IfaceState>) =>
+        setState((s) => ({
+          ...s,
+          interfaces: { ...s.interfaces, [name]: { ...s.interfaces[name], ...patch } },
+        }));
+
+      const c = abbrev(w0, [
+        "ip", "no", "shutdown", "description", "speed", "switchport", "encapsulation", "exit", "end",
+      ]);
+
       if (c === "ip") {
-        if (parts[1] && abbrev(parts[1], ["address"]) === "address" && ipOk(parts[2] ?? "") && ipOk(parts[3] ?? "")) {
-          setState((s) => ({
-            ...s,
-            interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], ip: parts[2], mask: parts[3] } } }));
+        const sub = abbrev(parts[1] ?? "", ["address", "nat"]);
+        if (sub === "address" && ipOk(parts[2] ?? "") && ipOk(parts[3] ?? "")) {
+          setIf({ ip: parts[2], mask: parts[3] });
           sound.click();
           return;
         }
-        return invalid(cmd, w0.length + 1);
+        if (sub === "nat" && ["inside", "outside"].includes((parts[2] ?? "").toLowerCase())) {
+          sound.click();
+          return;
+        }
+        return invalid(cmd, at);
       }
+
       if (c === "no") {
-        if (parts[1] && abbrev(parts[1], ["shutdown"]) === "shutdown") {
-          setState((s) => ({
-            ...s,
-            interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], up: true } } }));
-          say(`%LINK-5-CHANGED: Interface ${curIf}, changed state to up`, "dim");
-          say(`%LINEPROTO-5-UPDOWN: Line protocol on Interface ${curIf}, changed state to up`, "dim");
+        if (abbrev(parts[1] ?? "", ["shutdown"]) === "shutdown") {
+          setIf({ up: true });
+          say(`%LINK-5-CHANGED: Interface ${name}, changed state to up`, "dim");
+          say(`%LINEPROTO-5-UPDOWN: Line protocol on Interface ${name}, changed state to up`, "dim");
           sound.good();
           return;
         }
-        return invalid(cmd, w0.length + 1);
+        return invalid(cmd, at);
       }
+
       if (c === "shutdown") {
-        setState((s) => ({
-          ...s,
-          interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], up: false } } }));
-        say(`%LINK-5-CHANGED: Interface ${curIf}, changed state to administratively down`, "dim");
+        setIf({ up: false });
+        say(`%LINK-5-CHANGED: Interface ${name}, changed state to administratively down`, "dim");
         return;
       }
+
       if (c === "description") {
-        const text = parts.slice(1).join(" ");
-        setState((s) => ({
-          ...s,
-          interfaces: { ...s.interfaces, [curIf]: { ...s.interfaces[curIf], desc: text } } }));
+        setIf({ desc: parts.slice(1).join(" ") });
         sound.click();
         return;
       }
+
+      if (c === "speed") {
+        if (["10", "100", "1000", "auto"].includes(parts[1] ?? "")) {
+          setIf({ speed: parts[1] });
+          sound.click();
+          return;
+        }
+        return invalid(cmd, at);
+      }
+
+      if (c === "switchport") {
+        const a = abbrev(parts[1] ?? "", ["mode", "access", "trunk"]);
+        if (a === "mode") {
+          const m = abbrev(parts[2] ?? "", ["access", "trunk"]);
+          if (m === "access" || m === "trunk") { setIf({ mode: m }); sound.click(); return; }
+        }
+        if (a === "access" && abbrev(parts[2] ?? "", ["vlan"]) === "vlan" && /^\d+$/.test(parts[3] ?? "")) {
+          setIf({ accessVlan: String(Number(parts[3])) });
+          sound.click();
+          return;
+        }
+        /* "switchport trunk allowed vlan ..." etc. is accepted but not graded. */
+        if (a === "trunk" && parts[2]) { sound.click(); return; }
+        return invalid(cmd, at);
+      }
+
+      if (c === "encapsulation") {
+        if (!name.includes(".")) {
+          say("% Encapsulation can only be set on a sub-interface.", "err");
+          sound.bad();
+          return;
+        }
+        if (abbrev(parts[1] ?? "", ["dot1q"]) === "dot1q" && /^\d+$/.test(parts[2] ?? "")) {
+          setIf({ encap: String(Number(parts[2])) });
+          sound.click();
+          return;
+        }
+        return invalid(cmd, at);
+      }
+
       if (c === "exit") { setMode("conf"); setCurIf(null); return; }
       if (c === "end") { setMode("priv"); setCurIf(null); return; }
+      return invalid(cmd);
+    }
+
+    /* ── DHCP pool config ── */
+    if (mode === "conf-dhcp" && curPool) {
+      const pool = curPool;
+      const c = abbrev(w0, ["network", "default-router", "dns-server", "exit", "end"]);
+      if (c === "network") {
+        if (ipOk(parts[1] ?? "") && ipOk(parts[2] ?? "")) {
+          setState((s) => ({
+            ...s,
+            dhcpPools: { ...s.dhcpPools, [pool]: { network: `${parts[1]} ${parts[2]}` } },
+          }));
+          sound.click();
+          return;
+        }
+        return invalid(cmd, at);
+      }
+      if (c === "default-router" || c === "dns-server") {
+        if (ipOk(parts[1] ?? "")) { sound.click(); return; }
+        return invalid(cmd, at);
+      }
+      if (c === "exit") { setMode("conf"); setCurPool(null); return; }
+      if (c === "end") { setMode("priv"); setCurPool(null); return; }
+      return invalid(cmd);
+    }
+
+    /* ── VLAN config ── */
+    if (mode === "conf-vlan") {
+      const c = abbrev(w0, ["name", "exit", "end"]);
+      if (c === "name") {
+        if (parts[1]) { sound.click(); return; }
+        return invalid(cmd, at);
+      }
+      if (c === "exit") { setMode("conf"); return; }
+      if (c === "end") { setMode("priv"); return; }
       return invalid(cmd);
     }
 
@@ -294,27 +457,47 @@ export default function NetCli({
     const H: Record<Mode, string[]> = {
       user: ["enable        Turn on privileged commands", "show          Show running system information", "exit          Exit the EXEC"],
       priv: ["configure     Enter configuration mode", "show          Show running system information", "ping          Send echo messages", "write         Write running config to memory", "disable       Turn off privileged commands"],
-      conf: ["hostname      Set the system's name", "interface     Select an interface", "line          Configure a terminal line", "banner        Define a login banner", "end           Exit configure mode"],
-      "conf-if": ["ip address    Set the interface address", "no shutdown   Enable the interface", "shutdown      Disable the interface", "description   Describe the interface", "exit          Leave interface config"],
-      "conf-line": ["password      Set a password", "login         Require password checking", "exit          Leave line config"] };
+      conf: ["hostname      Set the system's name", "interface     Select an interface (or sub-interface)", "ip            Routing, DHCP and NAT", "vlan          Create a VLAN", "access-list   Define an access list", "line          Configure a terminal line", "banner        Define a login banner", "end           Exit configure mode"],
+      "conf-if": ["ip address    Set the interface address", "no shutdown   Enable the interface", "shutdown      Disable the interface", "description   Describe the interface", "speed         Set the port speed", "switchport    Access / trunk settings", "encapsulation Set dot1q on a sub-interface", "exit          Leave interface config"],
+      "conf-line": ["password      Set a password", "login         Require password checking", "exit          Leave line config"],
+      "conf-dhcp": ["network       Set the pool network", "default-router Set the gateway", "dns-server    Set the DNS server", "exit          Leave DHCP config"],
+      "conf-vlan": ["name          Name the VLAN", "exit          Leave VLAN config"],
+    };
     H[mode].forEach((l) => say("  " + l, "dim"));
   }
 
   function show(parts: string[]) {
     const sub = parts[1]?.toLowerCase() ?? "";
+    const what = (parts[2] ?? "").toLowerCase();
+    const names = Object.keys(state.interfaces);
+    const physical = names.filter((n) => !n.includes("."));
+
     if (sub.startsWith("run")) {
       say("Building configuration...", "dim");
       say("!");
       say(`hostname ${state.hostname}`);
       say("!");
-      IFACES.forEach((n) => {
+      if (state.ipRouting) say("ip routing");
+      state.vlans.forEach((v) => say(`vlan ${v}`));
+      names.forEach((n) => {
         const i = state.interfaces[n];
         say(`interface ${n}`);
         if (i.desc) say(` description ${i.desc}`);
+        if (i.encap) say(` encapsulation dot1Q ${i.encap}`);
+        if (i.mode) say(` switchport mode ${i.mode}`);
+        if (i.accessVlan) say(` switchport access vlan ${i.accessVlan}`);
+        if (i.speed) say(` speed ${i.speed}`);
         say(i.ip ? ` ip address ${i.ip} ${i.mask}` : " no ip address");
         say(i.up ? " no shutdown" : " shutdown");
         say("!");
       });
+      Object.entries(state.dhcpPools).forEach(([name, p]) => {
+        say(`ip dhcp pool ${name}`);
+        if (p.network) say(` network ${p.network}`);
+        say("!");
+      });
+      state.routes.forEach((r) => say(`ip route ${r.dest} ${r.mask} ${r.via}`));
+      if (state.natOverload) say("ip nat inside source ... overload");
       if (state.banner) say(`banner motd ^C ${state.banner} ^C`);
       if (state.vtyPassword) {
         say("line vty 0 4");
@@ -325,9 +508,16 @@ export default function NetCli({
       say("end");
       return;
     }
+
+    if (sub === "ip" && what.startsWith("rou")) {
+      if (state.routes.length === 0) say("Gateway of last resort is not set");
+      state.routes.forEach((r) => say(`S    ${r.dest} ${r.mask} [1/0] via ${r.via}`));
+      return;
+    }
+
     if (sub === "ip") {
       say("Interface                  IP-Address      OK? Status");
-      IFACES.forEach((n) => {
+      names.forEach((n) => {
         const i = state.interfaces[n];
         say(
           n.padEnd(27) +
@@ -338,6 +528,52 @@ export default function NetCli({
       });
       return;
     }
+
+    if (sub.startsWith("int") && what.startsWith("stat")) {
+      say("Port      Status       Vlan    Speed");
+      physical.forEach((n) => {
+        const i = state.interfaces[n];
+        const vlan = i.mode === "trunk" ? "trunk" : (i.accessVlan ?? "1");
+        say(
+          shortIf(n).padEnd(10) +
+            (i.up ? "connected" : "notconnect").padEnd(13) +
+            vlan.padEnd(8) +
+            (i.speed ?? "auto")
+        );
+      });
+      setState((s) => ({ ...s, verified: true }));
+      return;
+    }
+
+    if (sub.startsWith("int") && what.startsWith("tru")) {
+      say("Port      Mode         Status");
+      physical
+        .filter((n) => state.interfaces[n].mode === "trunk")
+        .forEach((n) =>
+          say(shortIf(n).padEnd(10) + "on".padEnd(13) + (state.interfaces[n].up ? "trunking" : "not-trunking"))
+        );
+      setState((s) => ({ ...s, verified: true }));
+      return;
+    }
+
+    if (sub.startsWith("vla")) {
+      say("VLAN Name        Status    Ports");
+      ["1", ...state.vlans.filter((v) => v !== "1")].forEach((v) => {
+        const ports = physical
+          .filter((n) => {
+            const i = state.interfaces[n];
+            if (i.mode === "trunk") return false;
+            return v === "1" ? !i.accessVlan : i.accessVlan === v;
+          })
+          .map(shortIf)
+          .join(", ");
+        const name = v === "1" ? "default" : `VLAN${v.padStart(4, "0")}`;
+        say(v.padEnd(5) + name.padEnd(12) + "active".padEnd(10) + ports);
+      });
+      setState((s) => ({ ...s, verified: true }));
+      return;
+    }
+
     if (sub.startsWith("ver")) {
       say("NetQuest IOS — Educational Build, Version 15.0");
       return;
@@ -347,9 +583,7 @@ export default function NetCli({
 
   function ping(target?: string) {
     if (!target || !ipOk(target)) return invalid(`ping ${target ?? ""}`, 5);
-    const reachable = IFACES.some(
-      (n) => state.interfaces[n].ip === target && state.interfaces[n].up
-    );
+    const reachable = Object.values(state.interfaces).some((i) => i.ip === target && i.up);
     say("Type escape sequence to abort.", "dim");
     say(`Sending 5, 100-byte ICMP Echos to ${target}:`, "dim");
     say(reachable ? "!!!!!" : ".....");
@@ -411,7 +645,7 @@ export default function NetCli({
             if (!m || m.objectives.length === 0) return;
             setMission(m);
             setDifficulty(d); setState(freshState()); setMode("user");
-            setCurIf(null); setCommands(0); setHistory([]); setResult(null);
+            setCurIf(null); setCurPool(null); setCommands(0); setHistory([]); setResult(null);
             setPhase("count");
           }}
         />
@@ -455,7 +689,8 @@ export default function NetCli({
           <HudItem label="time" value={`${mm}:${ss}`} tone={timeLeft <= 30 ? "alert" : "text"} />
         </span>
       </Hud>
-        {mission.imagePath && (
+
+      {mission.imagePath && (
         <div className="border-b border-[var(--color-line)] bg-[var(--color-deep)] p-4">
           <a href={mission.imagePath} target="_blank" rel="noreferrer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -467,6 +702,7 @@ export default function NetCli({
           </a>
         </div>
       )}
+
       <div className="grid lg:grid-cols-[1.6fr_1fr]">
         <div
           ref={screenRef}

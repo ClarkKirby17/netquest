@@ -2,7 +2,7 @@ import { Terminal, Check } from "lucide-react";
 import { Card, CardHead, Pill, Empty } from "@/components/ui";
 import {
   createMission, deleteMission, toggleMission, addObjective, deleteObjective } from "@/lib/mission-actions";
-import { OBJECTIVE_KINDS, INTERFACES, describeObjective } from "@/lib/cli-types";
+import { OBJECTIVE_KINDS, OBJECTIVE_IFACES, describeObjective, shortIf } from "@/lib/cli-types";
 import type { CliObjectiveKind, Difficulty } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import MissionImageForm from "./MissionImageForm";
@@ -176,18 +176,18 @@ export default function MissionManager({
                     <label className={labelCx}>Interface</label>
                     <select name="iface" className={inputCx + " cursor-pointer"} defaultValue="">
                       <option value="">n/a</option>
-                      {INTERFACES.map((i) => (
-                        <option key={i} value={i}>{i.replace("GigabitEthernet", "Gi")}</option>
+                      {OBJECTIVE_IFACES.map((i) => (
+                        <option key={i} value={i}>{shortIf(i)}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="w-[140px]">
+                  <div className="w-[200px]">
                     <label className={labelCx}>Value</label>
-                    <input name="value" placeholder="R1 / 10.0.0.1" className={inputCx} />
+                    <input name="value" placeholder="R1 / 10.0.0.1 / 10 / 10.0.0.0 255.255.255.0" className={inputCx} />
                   </div>
                   <div className="w-[140px]">
                     <label className={labelCx}>Value 2</label>
-                    <input name="value2" placeholder="mask" className={inputCx} />
+                    <input name="value2" placeholder="mask / next hop" className={inputCx} />
                   </div>
                   <button className="btn btn-ghost">Add</button>
                 </form>

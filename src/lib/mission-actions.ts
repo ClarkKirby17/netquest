@@ -6,6 +6,7 @@ import { del } from "@vercel/blob";
 import { db, cliMissions, cliObjectives, auditLogs } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { uploadImage } from "@/lib/uploads"; // must match your upload file's real path
+import { OBJECTIVE_KINDS } from "@/lib/cli-types";
 import type { CliObjectiveKind, Difficulty } from "@/db/schema";
 
 const pathFor = (scope: "mine" | "global") =>
@@ -82,6 +83,10 @@ export async function addObjective(formData: FormData) {
   const kind = String(formData.get("kind")) as CliObjectiveKind;
   if (!missionId || !kind) return;
 
+  /* Only accept known kinds. */
+  const def = OBJECTIVE_KINDS.find((k) => k.kind === kind);
+  if (!def) return;
+
   /* Only add to a mission you own. */
   const mission = await db.query.cliMissions.findFirst({ where: ownedBy(missionId, ownerId) });
   if (!mission) return;
@@ -89,6 +94,10 @@ export async function addObjective(formData: FormData) {
   const iface = String(formData.get("iface") ?? "").trim() || null;
   const value = String(formData.get("value") ?? "").trim() || null;
   const value2 = String(formData.get("value2") ?? "").trim() || null;
+
+  /* Reject objectives missing a field they need, since they could never be completed. */
+  const given = { iface, value, value2 };
+  if (def.needs.some((n) => !given[n])) return;
 
   const [{ maxOrder }] = await db
     .select({ maxOrder: max(cliObjectives.sortOrder) })
