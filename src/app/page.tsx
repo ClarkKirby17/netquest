@@ -118,9 +118,9 @@ export default function LandingPage() {
             </span>
 
             <h1 className="mt-5 font-[family-name:var(--font-display-src)] text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
-              MJ Quinones
+              Learn networking
               <br />
-              magbayad ka na <span className="text-[var(--color-signal)]">ng utang.</span>
+              by <span className="text-[var(--color-signal)]">playing it.</span>
             </h1>
 
             <p className="mt-5 max-w-lg text-[1.05rem] leading-relaxed text-[var(--color-muted)]">
