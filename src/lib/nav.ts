@@ -52,7 +52,6 @@ export const NAV: Record<Role, NavItem[]> = {
     { label: "Curriculum", href: "/admin/modules", icon: BookOpen },
     { label: "Default quizzes", href: "/admin/quizzes", icon: GraduationCap },
     { label: "Question pool", href: "/admin/questions", icon: Gamepad2 },
-    { label: "CLI missions", href: "/admin/missions", icon: Terminal },
     { label: "Courses", href: "/admin/courses", icon: Layers },
     { label: "Users", href: "/admin/users", icon: Users },
     { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
