@@ -7,7 +7,6 @@ import { Card, CardHead, PageHead, Table, Th, Td, Pill, Empty } from "@/componen
 import { cn } from "@/lib/utils";
 
 const SCOPES = [
-  ["class", "My class"],
   ["section", "My section"],
   ["all", "Everyone"],
 ] as const;
