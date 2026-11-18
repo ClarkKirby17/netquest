@@ -180,10 +180,6 @@ export async function lessonsForStudent(userId: number, moduleId: number) {
 /**
  * Everything the reader needs, with access already checked.
  * Returns null when the student may not open this lesson.
- *
- * This used to call modulesForStudent() and lessonsForStudent(), which
- * between them issued about ten sequential queries — painful when the
- * database is a continent away. It now gathers the same facts in four.
  */
 export async function readerContext(userId: number, lessonId: number) {
   /* 1. the lesson and its module in one join */
@@ -238,27 +234,46 @@ export async function readerContext(userId: number, lessonId: number) {
   const earlierAllRead =
     earlierLessons.length > 0 ? earlierLessons.every((l) => l.completed === true) : true;
 
-  /* …then their quizzes, if any are published. One query covers them. */
+  /* …then the ONE quiz that applies to this student for each earlier
+     module (their instructor's, else the admin default). Same rule as
+     modulesForStudent, so the module list and the reader never disagree. */
   let earlierQuizzesPassed = true;
   if (earlierAllRead && earlierIds.length > 0) {
+    const profile = await db.query.studentProfiles.findFirst({
+      where: eq(studentProfiles.userId, userId),
+    });
+
     const quizRows = await db
-      .select({ quizId: quizzes.id, passed: quizAttempts.passed })
+      .select({
+        id: quizzes.id,
+        moduleId: quizzes.moduleId,
+        instructorId: quizzes.instructorId,
+      })
       .from(quizzes)
-      .leftJoin(
-        quizAttempts,
-        and(
-          eq(quizAttempts.quizId, quizzes.id),
-          eq(quizAttempts.userId, userId),
-          eq(quizAttempts.passed, true)
-        )
-      )
       .where(and(inArray(quizzes.moduleId, earlierIds), eq(quizzes.isPublished, true)));
 
-    const byQuiz = new Map<number, boolean>();
-    for (const r of quizRows) {
-      byQuiz.set(r.quizId, byQuiz.get(r.quizId) || r.passed === true);
-    }
-    earlierQuizzesPassed = Array.from(byQuiz.values()).every(Boolean);
+    const passedRows = quizRows.length
+      ? await db
+          .select({ quizId: quizAttempts.quizId })
+          .from(quizAttempts)
+          .where(
+            and(
+              eq(quizAttempts.userId, userId),
+              eq(quizAttempts.passed, true),
+              inArray(quizAttempts.quizId, quizRows.map((q) => q.id))
+            )
+          )
+      : [];
+    const passedSet = new Set(passedRows.map((r) => r.quizId));
+
+    earlierQuizzesPassed = earlierIds.every((moduleId) => {
+      const own = profile?.instructorId
+        ? quizRows.find((q) => q.moduleId === moduleId && q.instructorId === profile.instructorId)
+        : undefined;
+      const fallback = quizRows.find((q) => q.moduleId === moduleId && q.instructorId === null);
+      const chosen = own ?? fallback;
+      return !chosen || passedSet.has(chosen.id);
+    });
   }
 
   /* The module is locked unless everything before it is done. */

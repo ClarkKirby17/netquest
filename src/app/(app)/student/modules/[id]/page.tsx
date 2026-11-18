@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { Lock, Check, FileText, ArrowLeft } from "lucide-react";
-import { db, modules } from "@/db";
 import { requireRole } from "@/lib/guard";
 import { lessonsForStudent, modulesForStudent } from "@/lib/learning";
 import { quizStateFor } from "@/lib/quiz";
@@ -12,17 +10,29 @@ export default async function ModuleLessonsPage({ params }: { params: Promise<{ 
   const me = await requireRole("student");
   const { id } = await params;
   const moduleId = Number(id);
-  if (!moduleId) notFound();
+  if (!moduleId) {
+    console.error("[module page] bad id param:", id);
+    notFound();
+  }
 
   const cards = await modulesForStudent(me.userId);
-  const card = cards.find((c) => c.id === moduleId);
-  if (!card || card.state === "locked") notFound();
+  const card = cards.find((c) => Number(c.id) === moduleId);
+  if (!card) {
+    console.error(
+      "[module page] no card for id",
+      moduleId,
+      "available:",
+      cards.map((c) => ({ id: c.id, n: c.moduleNumber, state: c.state }))
+    );
+    notFound();
+  }
+  if (card.state === "locked") {
+    console.error("[module page] card is locked:", card);
+    notFound();
+  }
 
-  const mod = await db.query.modules.findFirst({ where: eq(modules.id, moduleId) });
-  if (!mod) notFound();
-
-  const rows = await lessonsForStudent(me.userId, moduleId);
-  const quiz = await quizStateFor(me.userId, moduleId, card.lessonsComplete);
+  const rows = await lessonsForStudent(me.userId, card.id);
+  const quiz = await quizStateFor(me.userId, card.id, card.lessonsComplete);
 
   return (
     <>
@@ -33,7 +43,7 @@ export default async function ModuleLessonsPage({ params }: { params: Promise<{ 
         <ArrowLeft size={14} /> All modules
       </Link>
 
-      <PageHead eyebrow={`module ${mod.moduleNumber}`} title={mod.title} sub={mod.description} />
+      <PageHead eyebrow={`module ${card.moduleNumber}`} title={card.title} sub={card.description} />
 
       <div className="mb-4 max-w-md">
         <Progress value={card.percent} label={`${card.lessonsDone} of ${card.lessonCount} lessons complete`} />
@@ -53,8 +63,9 @@ export default async function ModuleLessonsPage({ params }: { params: Promise<{ 
                     "flex items-center gap-4 px-5 py-4 transition-colors " +
                     (locked ? "opacity-50" : "hover:bg-[rgba(255,255,255,.02)]")
                   }
-                ><span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
-                    {mod.moduleNumber}.{l.order}
+                >
+                  <span className="font-[family-name:var(--font-mono-src)] text-xs text-[var(--color-muted)]">
+                    {card.moduleNumber}.{l.order}
                   </span>
                   <span className={locked ? "flex-1 text-[var(--color-muted)]" : "flex-1 font-medium"}>
                     {l.title}
@@ -78,7 +89,8 @@ export default async function ModuleLessonsPage({ params }: { params: Promise<{ 
 
       {quiz.status !== "none" && (
         <Card className="mt-4 p-5">
-          <div className="flex flex-wrap items-center gap-4"><div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="min-w-0 flex-1">
               <h3 className="font-[family-name:var(--font-display-src)] text-lg font-bold">
                 {quiz.title}
               </h3>
