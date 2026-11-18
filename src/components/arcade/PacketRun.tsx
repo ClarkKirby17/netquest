@@ -11,7 +11,7 @@ const DEBUG_HITBOX = false;
 const SPRITES = {
   ground: "/packet-run/cactus.png",
   air: "/packet-run/bird.png",
-  packet: "/packet-run/mukhanimj.png",
+  packet: "/packet-run/packet.png",
 };
 
 /* ── SIZES: change these to make things bigger or smaller ── */
