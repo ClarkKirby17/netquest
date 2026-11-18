@@ -6,37 +6,12 @@ import {
   TitleScreen, Countdown, Hud, HudItem, Summary,
   useArcadeSound, type SubmitResult } from "./shell";
 
-/* Packet Run — you are a packet with a destination address.
-   Cross a congested link (jump collisions, duck broadcast storms) and at
-   every router pick the correct next hop by longest-prefix match
-   before your TTL runs out. The game pauses at each router so you have
-   time to read the routing table and answer.
-
-   ── IMAGES ──────────────────────────────────────────────────────────
-   Put these PNGs in  public/packet-run/  (transparent background):
-
-     cactus.png   ground hazard you jump over
-     bird.png     flying hazard you duck under
-     packet.png   the player packet (optional)
-
-   Any PNG size works. The game crops the empty / faint space around
-   each image (glows and soft shadows are ignored), so the art itself
-   sits on the ground line and the hitbox is based on the art. Each
-   sprite is drawn at the HEIGHT set in SIZE below; the width follows
-   the art's proportions. Missing files fall back to colored boxes.
-
-   ── HITBOXES ────────────────────────────────────────────────────────
-   The hitbox is the visible art shrunk by the HIT percentages (0.2 =
-   cut 20% off that side). Bigger numbers = smaller hitbox = more
-   forgiving. Set DEBUG_HITBOX = true to see the red boxes while
-   playing (and crop info in the browser console). */
-
 const DEBUG_HITBOX = false;
 
 const SPRITES = {
   ground: "/packet-run/cactus.png",
   air: "/packet-run/bird.png",
-  packet: "/packet-run/packet.png",
+  packet: "/packet-run/mukhanimj.png",
 };
 
 /* ── SIZES: change these to make things bigger or smaller ── */
@@ -80,11 +55,11 @@ const CONFIG: Record<
   Difficulty,
   { speed: number; gravity: number; spawn: number; gateEvery: number; gates: number; decide: number; desc: string }
 > = {
-  easy:   { speed: 4.6, gravity: 0.62, spawn: 90, gateEvery: 300, gates: 6, decide: 9000,
+  easy:   { speed: 6, gravity: 0.5, spawn: 90, gateEvery: 300, gates: 6, decide: 9000,
             desc: "Short path, clear routing tables. One wrong turn is survivable." },
-  medium: { speed: 4.6, gravity: 0.72, spawn: 70, gateEvery: 250, gates: 7, decide: 7000,
+  medium: { speed: 6, gravity: 0.5, spawn: 70, gateEvery: 250, gates: 7, decide: 7000,
             desc: "Busier link. Overlapping routes: the longest matching prefix wins." },
-  hard:   { speed: 6.0, gravity: 0.84, spawn: 52, gateEvery: 210, gates: 8, decide: 5000,
+  hard:   { speed: 6.0, gravity: 0.5, spawn: 52, gateEvery: 210, gates: 8, decide: 5000,
             desc: "Saturated link, tricky tables. Longer prefixes can be traps." } };
 
 const JUMP_V = -12.5; /* jump strength (more negative = higher) */
@@ -106,6 +81,20 @@ const GROUND = H - 46;
 const GATE_W = 150;
 const PKT_X = 60;
 const AIR_BOTTOM = GROUND - 30; /* underside of the bird sprite */
+
+/* Clear ground needed in front of the packet before a router may pause the
+   game. When the player answers, the world resumes at full speed, so a
+   hazard closer than this would leave no time to react (a jump lasts ~50
+   frames, i.e. ~300px at speed 6). Raise it for more breathing room. */
+const SAFE_GAP = 300;
+
+/* Router lanes: two boxes of the SAME size, stacked with a small gap.
+   Shared at module level so both the drawing code and the mouse
+   hit-testing use the exact same rectangles. */
+const LANE_H = 62;
+const LANE_GAP = 8;
+const DN_Y = GROUND - LANE_H;
+const UP_Y = DN_Y - LANE_GAP - LANE_H;
 
 /* ───────── sprite + hitbox helpers ───────── */
 
@@ -280,6 +269,7 @@ export default function PacketRun({
     gates: [] as Gate[], spawnedGates: 0, gateTimer: 0,
     obstacles: [] as Obstacle[],
     decision: null as Decision | null,
+    hover: null as Lane | null, /* lane under the mouse while a router waits */
     choose: ((_lane: Lane) => {}) as (lane: Lane) => void,
     cfg: CONFIG.easy });
 
@@ -384,42 +374,58 @@ export default function PacketRun({
     const obstacleY = (o: Obstacle) =>
       o.kind === "air" ? AIR_BOTTOM - o.h : GROUND - o.h;
 
-    const UP_Y = GROUND - 128, UP_H = 72, DN_Y = GROUND - 50, DN_H = 50;
     const MONO = "ui-monospace, monospace";
 
     const drawGate = (gt: Gate) => {
+      const waiting = g.decision?.gate === gt;
       const laneColor = (lane: Lane) =>
         !gt.resolved ? "#00c9ff" : lane === gt.correct ? "#00f5a0" : "#3a2330";
 
       ctx.fillStyle = "rgba(0,201,255,.05)";
       ctx.fillRect(gt.x, UP_Y - 16, gt.w, GROUND - UP_Y + 16);
 
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = laneColor("up");   ctx.strokeRect(gt.x, UP_Y, gt.w, UP_H);
-      ctx.strokeStyle = laneColor("down"); ctx.strokeRect(gt.x, DN_Y, gt.w, DN_H);
+      const box = (lane: Lane, y: number) => {
+        const hot = waiting && g.hover === lane;
+        if (hot) {
+          ctx.fillStyle = "rgba(0,245,160,.16)";
+          ctx.fillRect(gt.x, y, gt.w, LANE_H);
+        }
+        ctx.lineWidth = hot ? 2.5 : 1.5;
+        ctx.strokeStyle = hot ? "#00f5a0" : laneColor(lane);
+        ctx.strokeRect(gt.x, y, gt.w, LANE_H);
+      };
+      box("up", UP_Y);
+      box("down", DN_Y);
 
       ctx.font = `bold 9px ${MONO}`;
       ctx.fillStyle = "#00c9ff";
       ctx.fillText(`ROUTER ${gt.router} · NEXT HOP?`, gt.x, UP_Y - 5);
 
       const lane = (r: Route, y: number, hint: string) => {
-        ctx.font = `10px ${MONO}`;
+        ctx.font = `bold 11px ${MONO}`;
         ctx.fillStyle = "#cfe3ff";
-        ctx.fillText(r.prefix, gt.x + 8, y + 20);
+        ctx.fillText(r.prefix, gt.x + 10, y + 26);
         ctx.font = `9px ${MONO}`;
         ctx.fillStyle = "#8fa7c4";
-        ctx.fillText(`via ${r.hop} · ${hint}`, gt.x + 8, y + 34);
+        ctx.fillText(`via ${r.hop} · ${hint}`, gt.x + 10, y + 44);
       };
-      lane(gt.up, UP_Y + 6, "↑ / space");
-      lane(gt.down, DN_Y + 4, "↓ down");
+      lane(gt.up, UP_Y, "↑ / space");
+      lane(gt.down, DN_Y, "↓ down");
     };
 
     /* apply the chosen route (null = ran out of time) */
     const resolveGate = (gt: Gate, taken: Lane | null) => {
       gt.resolved = true;
       g.decision = null;
+      g.hover = null;
       g.hops++;
       g.ttl -= 1; /* every router decrements TTL */
+
+      /* Backstop: the world is about to resume at full speed, so make sure
+         nothing is sitting on top of (or right in front of) the packet. */
+      g.obstacles = g.obstacles.filter(
+        (o) => !(o.x < PKT_X + SAFE_GAP && o.x + o.w > PKT_X - 20)
+      );
 
       if (taken === gt.correct) {
         g.correct++;
@@ -485,8 +491,12 @@ export default function PacketRun({
           g.gateTimer = g.cfg.gateEvery;
         }
 
-        /* spawn hazards, but leave a clean runway after each router */
-        if (g.frame % g.cfg.spawn === 0 && !g.gates.some((gt) => gt.x > W - 400)) {
+        /* Spawn hazards only when no router needs an answer soon (an
+           unresolved router anywhere on screen) and leave a clean runway
+           after each router once it has been answered. */
+        const routerIncoming = g.gates.some((gt) => !gt.resolved);
+        const routerJustPassed = g.gates.some((gt) => gt.resolved && gt.x > W - 400);
+        if (g.frame % g.cfg.spawn === 0 && !routerIncoming && !routerJustPassed) {
           const h = HAZARDS[Math.floor(Math.random() * HAZARDS.length)];
           const isAir = h.kind === "air";
           const oh = isAir ? SIZE.airH : SIZE.groundH;
@@ -499,10 +509,21 @@ export default function PacketRun({
             passed: false });
         }
 
-        /* move routers; pause when one is fully on screen and you're grounded */
+        /* Is any hazard close enough that the player couldn't react once
+           the world resumes? If so, the router waits (keeps scrolling). */
+        const hazardClose = g.obstacles.some(
+          (o) => o.x + o.w > PKT_X - 20 && o.x < PKT_X + SAFE_GAP
+        );
+
+        /* move routers; pause when one is fully on screen, you're grounded,
+           and the path ahead is clear */
         for (const gt of g.gates) {
           gt.x -= g.cfg.speed;
-          if (!g.decision && !gt.resolved && gt.x <= W - gt.w - 30 && g.y >= GROUND) {
+          if (
+            !g.decision && !gt.resolved &&
+            gt.x <= W - gt.w - 30 && g.y >= GROUND &&
+            !hazardClose
+          ) {
             g.decision = { gate: gt, deadline: now + g.cfg.decide, lockUntil: now + 500 };
             g.ducking = false;
             setNote({
@@ -602,9 +623,12 @@ export default function PacketRun({
         ctx.fillStyle = frac > 0.3 ? "#00f5a0" : "#ff4d6d";
         ctx.fillRect(bx, 12, barW * frac, 6);
         ctx.fillStyle = "#cfe3ff";
-        ctx.font = `bold 10px ${MONO}`;
+        ctx.font = `bold 12px ${MONO}`;
         ctx.textAlign = "center";
-        ctx.fillText(`PICK A ROUTE · ${(left / 1000).toFixed(1)}s`, W / 2, 34);
+        ctx.fillText("CLICK A ROUTE OR CHOOSE AN OPTION", W / 2, 36);
+        ctx.fillStyle = frac > 0.3 ? "#8fa7c4" : "#ff4d6d";
+        ctx.font = `10px ${MONO}`;
+        ctx.fillText(`${(left / 1000).toFixed(1)}s left`, W / 2, 52);
         ctx.textAlign = "left";
       }
 
@@ -651,6 +675,37 @@ export default function PacketRun({
     );
   }
 
+  /* which route box (if any) is under the mouse? Works even when the
+     canvas is scaled down by CSS (max-w-full). */
+  const laneAt = (e: React.MouseEvent<HTMLCanvasElement>): Lane | null => {
+    const g = game.current;
+    const canvas = canvasRef.current;
+    if (!g.decision || !canvas) return null;
+    const r = canvas.getBoundingClientRect();
+    const x = ((e.clientX - r.left) * W) / r.width;
+    const y = ((e.clientY - r.top) * H) / r.height;
+    const gt = g.decision.gate;
+    if (x < gt.x || x > gt.x + gt.w) return null;
+    if (y >= UP_Y && y <= UP_Y + LANE_H) return "up";
+    if (y >= DN_Y && y <= DN_Y + LANE_H) return "down";
+    return null;
+  };
+
+  const onCanvasMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    game.current.hover = laneAt(e);
+  };
+  const onCanvasLeave = () => { game.current.hover = null; };
+  const onCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const g = game.current;
+    if (g.decision) {
+      /* while a router waits, a click only counts if it lands on a box */
+      const lane = laneAt(e);
+      if (lane) g.choose(lane);
+      return;
+    }
+    jump();
+  };
+
   const noteColor =
     note.tone === "ok" ? "#00f5a0" : note.tone === "bad" ? "#ff4d6d" : "#8fa7c4";
 
@@ -671,7 +726,9 @@ export default function PacketRun({
           ref={canvasRef}
           width={W}
           height={H}
-          onClick={jump}
+          onClick={onCanvasClick}
+          onMouseMove={onCanvasMove}
+          onMouseLeave={onCanvasLeave}
           className="max-w-full cursor-pointer rounded-[10px] border border-[var(--color-line)]"
           style={{ imageRendering: "pixelated" }}
         />
